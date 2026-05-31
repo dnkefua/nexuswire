@@ -37,4 +37,6 @@ jobs:
           create_credentials_file: true
 
       - name: Deploy to Firebase Hosting
-        run: npx firebase-tools deploy --only hosting --project nexuswire-app
+        run: |
+          npx firebase-tools experiments:enable webframeworks
+          npx firebase-tools deploy --only hosting --project nexuswire-app
