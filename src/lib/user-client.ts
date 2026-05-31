@@ -1,9 +1,15 @@
 const USER_KEY = "nexuswire-user-name";
 const ACTIVE_JOURNALIST_KEY = "nexuswire-active-journalist";
+const CURRENT_USER_KEY = "nexuswire-current-user";
 
 export function getUserDisplayName(): string {
   if (typeof window === "undefined") return "Guest";
   try {
+    const userJson = localStorage.getItem(CURRENT_USER_KEY);
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      return user.username || "Guest";
+    }
     return localStorage.getItem(USER_KEY) || "Guest";
   } catch {
     return "Guest";
@@ -13,6 +19,12 @@ export function getUserDisplayName(): string {
 export function setUserDisplayName(name: string): void {
   try {
     localStorage.setItem(USER_KEY, name.trim());
+    const userJson = localStorage.getItem(CURRENT_USER_KEY);
+    if (userJson) {
+      const user = JSON.parse(userJson);
+      user.username = name.trim();
+      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+    }
   } catch {
     /* ignore */
   }

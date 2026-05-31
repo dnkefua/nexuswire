@@ -1,6 +1,7 @@
+import "server-only";
 import { promises as fs } from "fs";
 import path from "path";
-import { getFirestoreDb, isFirebaseConfigured } from "./firebase-admin";
+import { isFirebaseAdminConfigured } from "./firebase-config";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_DOC = "nexuswire/store";
@@ -20,16 +21,33 @@ function storePath(): string {
 }
 
 export function useFirebaseStore(): boolean {
-  return isFirebaseConfigured();
+  return isFirebaseAdminConfigured();
+}
+
+async function readFromFirestore(): Promise<DataStore | null> {
+  const { getFirestoreDb } = await import("./firebase-admin");
+  const db = getFirestoreDb();
+  const snap = await db.doc(STORE_DOC).get();
+  if (!snap.exists) return null;
+  return snap.data() as DataStore;
+}
+
+async function writeToFirestore(data: DataStore): Promise<void> {
+  const { getFirestoreDb } = await import("./firebase-admin");
+  const db = getFirestoreDb();
+  await db.doc(STORE_DOC).set(
+    {
+      ...data,
+      updatedAt: new Date().toISOString(),
+    },
+    { merge: true }
+  );
 }
 
 export async function readDataStore(): Promise<DataStore | null> {
   if (useFirebaseStore()) {
     try {
-      const db = getFirestoreDb();
-      const snap = await db.doc(STORE_DOC).get();
-      if (!snap.exists) return null;
-      return snap.data() as DataStore;
+      return await readFromFirestore();
     } catch (e) {
       console.error("Firestore read failed:", e);
       return null;
@@ -46,14 +64,7 @@ export async function readDataStore(): Promise<DataStore | null> {
 
 export async function writeDataStore(data: DataStore): Promise<void> {
   if (useFirebaseStore()) {
-    const db = getFirestoreDb();
-    await db.doc(STORE_DOC).set(
-      {
-        ...data,
-        updatedAt: new Date().toISOString(),
-      },
-      { merge: true }
-    );
+    await writeToFirestore(data);
     return;
   }
 

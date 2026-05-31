@@ -1,21 +1,17 @@
+import "server-only";
 import { cert, getApps, initializeApp, type App } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
-
-const PROJECT_ID = process.env.FIREBASE_PROJECT_ID || "nexuswire-app";
+import { FIREBASE_PROJECT_ID, isFirebaseAdminConfigured } from "./firebase-config";
 
 export function isFirebaseConfigured(): boolean {
-  return Boolean(
-    process.env.FIREBASE_CLIENT_EMAIL &&
-      process.env.FIREBASE_PRIVATE_KEY &&
-      process.env.FIREBASE_PROJECT_ID
-  );
+  return isFirebaseAdminConfigured();
 }
 
 export function getFirebaseAdmin(): App {
   const existing = getApps()[0];
   if (existing) return existing;
 
-  if (!isFirebaseConfigured()) {
+  if (!isFirebaseAdminConfigured()) {
     throw new Error("Firebase Admin is not configured. Set FIREBASE_* env variables.");
   }
 
@@ -23,11 +19,11 @@ export function getFirebaseAdmin(): App {
 
   return initializeApp({
     credential: cert({
-      projectId: PROJECT_ID,
+      projectId: FIREBASE_PROJECT_ID,
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
       privateKey: privateKey!,
     }),
-    projectId: PROJECT_ID,
+    projectId: FIREBASE_PROJECT_ID,
   });
 }
 

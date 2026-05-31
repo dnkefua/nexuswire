@@ -6,6 +6,7 @@ import { LogoIntro } from "@/components/LogoIntro";
 import { Nav } from "@/components/Nav";
 import { SearchShortcut } from "@/components/SearchShortcut";
 import { SearchProvider } from "@/context/SearchContext";
+import { UserProvider } from "@/context/UserContext";
 import "./globals.css";
 
 const exo = Exo_2({
@@ -36,14 +37,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${exo.variable} ${orbitron.variable}`}>
       <body className="font-sans antialiased pb-24">
-        <SearchProvider>
-          <LogoIntro />
-          {children}
-          <GlobalSearch />
-          <SearchShortcut />
-          <ConnectStatus />
-          <Nav />
-        </SearchProvider>
+        <UserProvider>
+          <SearchProvider>
+            <LogoIntro />
+            {children}
+            <GlobalSearch />
+            <SearchShortcut />
+            <ConnectStatus />
+            <Nav />
+          </SearchProvider>
+        </UserProvider>
       </body>
     </html>
   );

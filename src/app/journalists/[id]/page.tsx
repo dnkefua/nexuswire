@@ -20,6 +20,7 @@ import {
   getActiveJournalistId,
   setActiveJournalistId,
 } from "@/lib/user-client";
+import { useUser } from "@/context/UserContext";
 
 const PLATFORMS: ConnectedPlatform[] = [
   "website",
@@ -33,6 +34,7 @@ const PLATFORMS: ConnectedPlatform[] = [
 export default function JournalistDeskPage() {
   const params = useParams();
   const id = params.id as string;
+  const { currentUser, openAuth } = useUser();
 
   const [journalist, setJournalist] = useState<Journalist | null>(null);
   const [posts, setPosts] = useState<JournalistPost[]>([]);
@@ -42,6 +44,14 @@ export default function JournalistDeskPage() {
   const [isActive, setIsActive] = useState(
     () => typeof window !== "undefined" && getActiveJournalistId() === id
   );
+
+  // Deactivate desk if user logs out
+  useEffect(() => {
+    if (!currentUser) {
+      setIsActive(false);
+      setTab("posts");
+    }
+  }, [currentUser]);
 
   const [postForm, setPostForm] = useState({
     type: "blog" as PostType,
@@ -103,6 +113,10 @@ export default function JournalistDeskPage() {
   }, [id]);
 
   function activateDesk() {
+    if (!currentUser) {
+      openAuth("login");
+      return;
+    }
     setActiveJournalistId(id);
     setIsActive(true);
   }
@@ -251,20 +265,22 @@ export default function JournalistDeskPage() {
         </div>
 
         <div className="mt-6 flex gap-2 overflow-x-auto scroll-hide pb-1">
-          {(["posts", "publish", "connect"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={`flex-shrink-0 rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-wider ${
-                tab === t
-                  ? "bg-[var(--accent)] text-white"
-                  : "glass text-[var(--text-muted)]"
-              }`}
-            >
-              {t === "posts" ? "My Posts" : t === "publish" ? "Publish" : "Connect Feeds"}
-            </button>
-          ))}
+          {(["posts", "publish", "connect"] as const)
+            .filter((t) => currentUser || t === "posts")
+            .map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setTab(t)}
+                className={`flex-shrink-0 rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-wider ${
+                  tab === t
+                    ? "bg-[var(--accent)] text-white"
+                    : "glass text-[var(--text-muted)]"
+                }`}
+              >
+                {t === "posts" ? "My Posts" : t === "publish" ? "Publish" : "Connect Feeds"}
+              </button>
+            ))}
         </div>
 
         {tab === "posts" && (

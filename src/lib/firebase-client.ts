@@ -12,7 +12,6 @@ const firebaseConfig = {
 export function isFirebaseClientConfigured(): boolean {
   return Boolean(
     firebaseConfig.apiKey &&
-      firebaseConfig.appId &&
       firebaseConfig.projectId
   );
 }

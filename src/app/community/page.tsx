@@ -9,6 +9,7 @@ import Link from "next/link";
 import type { JournalistPost, Review, ReviewType } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { getUserDisplayName, setUserDisplayName } from "@/lib/user-client";
+import { useUser } from "@/context/UserContext";
 
 const TYPES: { id: ReviewType | "all"; label: string }[] = [
   { id: "all", label: "All" },
@@ -19,6 +20,7 @@ const TYPES: { id: ReviewType | "all"; label: string }[] = [
 ];
 
 export default function CommunityPage() {
+  const { currentUser, openAuth } = useUser();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [posts, setPosts] = useState<JournalistPost[]>([]);
   const [filter, setFilter] = useState<ReviewType | "all">("all");
@@ -26,13 +28,23 @@ export default function CommunityPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    authorName: typeof window !== "undefined" ? getUserDisplayName() : "",
+    authorName: "",
     type: "musician" as ReviewType,
     subject: "",
     rating: 5,
     body: "",
     mediaUrl: "",
   });
+
+  // Sync author name with logged-in user
+  useEffect(() => {
+    if (currentUser && currentUser.username) {
+      setForm((f) => ({ ...f, authorName: currentUser.username }));
+    } else {
+      setForm((f) => ({ ...f, authorName: "" }));
+      setShowForm(false);
+    }
+  }, [currentUser]);
 
   const load = useCallback(async () => {
     const params = filter !== "all" ? `?type=${filter}` : "";
@@ -65,6 +77,10 @@ export default function CommunityPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!currentUser) {
+      openAuth("login");
+      return;
+    }
     setSaving(true);
     try {
       setUserDisplayName(form.authorName);
@@ -90,12 +106,25 @@ export default function CommunityPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-6">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-sm text-[var(--text-muted)]">
-            Review musicians, blogs, albums, and videos. Like and comment on posts.
-          </p>
+          <div>
+            <p className="text-sm text-[var(--text-muted)]">
+              Review musicians, blogs, albums, and videos. Like and comment on posts.
+            </p>
+            {!currentUser && (
+              <p className="text-xs text-[var(--gold)] mt-1 font-semibold">
+                ✦ Create an account or sign in to publish reviews and rate items.
+              </p>
+            )}
+          </div>
           <button
             type="button"
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              if (!currentUser) {
+                openAuth("login");
+              } else {
+                setShowForm(!showForm);
+              }
+            }}
             className="btn-primary w-fit"
           >
             {showForm ? "Cancel" : "+ Write Review"}
@@ -119,7 +148,7 @@ export default function CommunityPage() {
           ))}
         </div>
 
-        {showForm && (
+        {showForm && currentUser && (
           <form
             onSubmit={handleSubmit}
             className="mb-8 grid gap-4 rounded-2xl glass-strong p-6 md:grid-cols-2"
@@ -130,8 +159,9 @@ export default function CommunityPage() {
               </label>
               <input
                 required
+                disabled
                 value={form.authorName}
-                onChange={(e) => setForm({ ...form, authorName: e.target.value })}
+                className="opacity-50 cursor-not-allowed bg-black/60"
               />
             </div>
             <div>

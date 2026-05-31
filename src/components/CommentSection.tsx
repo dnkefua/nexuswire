@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { Comment, EngagementTarget } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 import { getUserDisplayName, setUserDisplayName } from "@/lib/user-client";
+import { useUser } from "@/context/UserContext";
 
 interface CommentSectionProps {
   targetType: EngagementTarget;
@@ -11,12 +12,19 @@ interface CommentSectionProps {
 }
 
 export function CommentSection({ targetType, targetId }: CommentSectionProps) {
+  const { currentUser, openAuth } = useUser();
   const [comments, setComments] = useState<Comment[]>([]);
   const [body, setBody] = useState("");
-  const [authorName, setAuthorName] = useState(() =>
-    typeof window !== "undefined" ? getUserDisplayName() : ""
-  );
+  const [authorName, setAuthorName] = useState("");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (currentUser && currentUser.username) {
+      setAuthorName(currentUser.username);
+    } else {
+      setAuthorName("");
+    }
+  }, [currentUser]);
 
   useEffect(() => {
     let ignore = false;
@@ -33,7 +41,7 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!body.trim() || !authorName.trim()) return;
+    if (!currentUser || !body.trim() || !authorName.trim()) return;
     setSaving(true);
     try {
       setUserDisplayName(authorName);
@@ -65,24 +73,37 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
       <h4 className="mb-3 text-[10px] font-bold tracking-widest text-[var(--gold)] uppercase">
         Comments
       </h4>
-      <form onSubmit={handleSubmit} className="mb-4 space-y-2">
-        <input
-          value={authorName}
-          onChange={(e) => setAuthorName(e.target.value)}
-          placeholder="Your name"
-          required
-        />
-        <textarea
-          rows={2}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Share your take…"
-          required
-        />
-        <button type="submit" disabled={saving} className="btn-primary">
-          {saving ? "Posting…" : "Post Comment"}
-        </button>
-      </form>
+      
+      {!currentUser ? (
+        <div className="mb-4 rounded-xl border border-[var(--border)] bg-black/20 p-4 text-center">
+          <p className="text-xs text-[var(--text-muted)]">
+            You must be logged in to participate in the conversation.
+          </p>
+          <button
+            type="button"
+            onClick={() => openAuth("login")}
+            className="mt-2 text-xs font-bold text-[var(--accent)] hover:underline uppercase tracking-wider"
+          >
+            Sign In / Register
+          </button>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="mb-4 space-y-2">
+          <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider px-1">
+            Commenting as <span className="text-[var(--gold)]">{authorName}</span>
+          </div>
+          <textarea
+            rows={2}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Share your take…"
+            required
+          />
+          <button type="submit" disabled={saving} className="btn-primary">
+            {saving ? "Posting…" : "Post Comment"}
+          </button>
+        </form>
+      )}
       <ul className="space-y-3">
         {comments.length === 0 && (
           <p className="text-sm text-[var(--text-muted)]">No comments yet. Be the first.</p>

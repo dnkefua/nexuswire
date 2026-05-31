@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useSearch } from "@/context/SearchContext";
+import { useUser } from "@/context/UserContext";
 
 interface HeaderProps {
   title?: string;
@@ -10,6 +12,8 @@ interface HeaderProps {
 
 export function Header({ title, subtitle }: HeaderProps) {
   const { openSearch } = useSearch();
+  const { currentUser, openAuth, logout } = useUser();
+  const [showDropdown, setShowDropdown] = useState(false);
   const isHome = !title || title === "NexusWire";
 
   return (
@@ -47,6 +51,55 @@ export function Header({ title, subtitle }: HeaderProps) {
             </kbd>
           </button>
           <span className="live-dot hidden h-2 w-2 rounded-full sm:block" />
+
+          {currentUser && currentUser.username ? (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-black/30 px-3 py-2 transition-all hover:border-[var(--gold)] hover:glow-border"
+              >
+                <span className="h-5 w-5 rounded-full bg-[var(--gold)]/20 border border-[var(--gold)]/40 text-[9px] text-[var(--gold)] flex items-center justify-center font-bold font-display uppercase">
+                  {currentUser.username.substring(0, 2)}
+                </span>
+                <span className="hidden text-[11px] font-bold text-[var(--text-primary)] sm:inline truncate max-w-[80px]">
+                  {currentUser.username}
+                </span>
+              </button>
+              {showDropdown && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-40" 
+                    onClick={() => setShowDropdown(false)}
+                  />
+                  <div className="absolute right-0 mt-2 w-40 origin-top-right rounded-xl glass-strong border border-[var(--border)] p-2 shadow-2xl z-50 animate-fade-in">
+                    <div className="px-3 py-1.5 border-b border-[var(--border)] mb-1">
+                      <p className="text-[9px] text-[var(--text-muted)] uppercase tracking-wider">Account</p>
+                      <p className="text-xs font-semibold truncate text-[var(--gold)]">{currentUser.username}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowDropdown(false);
+                      }}
+                      className="w-full text-left rounded-lg px-3 py-2 text-xs font-bold text-[var(--danger)] hover:bg-[var(--danger)]/10 transition-colors"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openAuth("login")}
+              className="flex items-center gap-1.5 rounded-xl border border-[var(--gold)]/30 bg-[var(--gold)]/10 px-3 py-2 transition-all hover:border-[var(--gold)] hover:bg-[var(--gold)]/20 text-xs font-bold text-[var(--gold-bright)]"
+            >
+              <span className="font-display text-[9px]">◇</span>
+              <span>Sign In</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

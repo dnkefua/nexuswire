@@ -4,8 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { format } from "date-fns";
 import { Header } from "@/components/Header";
 import type { Broadcast, Journalist } from "@/lib/types";
+import { useUser } from "@/context/UserContext";
 
 export default function StudioPage() {
+  const { currentUser, openAuth } = useUser();
   const [journalists, setJournalists] = useState<Journalist[]>([]);
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [saving, setSaving] = useState(false);
@@ -39,6 +41,10 @@ export default function StudioPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!currentUser) {
+      openAuth("login");
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch("/api/broadcasts", {
@@ -65,6 +71,10 @@ export default function StudioPage() {
   }
 
   async function setStatus(id: string, status: Broadcast["status"]) {
+    if (!currentUser) {
+      openAuth("login");
+      return;
+    }
     await fetch("/api/broadcasts", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -80,7 +90,23 @@ export default function StudioPage() {
       <Header title="Broadcast Studio" subtitle="Schedule & Go Live" />
 
       <section className="mx-auto max-w-6xl px-4 py-6">
-        {journalists.length === 0 ? (
+        {!currentUser ? (
+          <div className="mb-10 rounded-2xl glass-strong p-8 text-center border border-[var(--border)] max-w-2xl mx-auto">
+            <h3 className="font-display text-sm font-bold tracking-widest text-[var(--gold)] uppercase mb-2">
+              Broadcast Studio Locked
+            </h3>
+            <p className="text-sm text-[var(--text-muted)] max-w-md mx-auto mb-4">
+              Access to scheduling and broadcast controls is restricted. Create an account or sign in to configure live streams.
+            </p>
+            <button
+              type="button"
+              onClick={() => openAuth("login")}
+              className="btn-primary"
+            >
+              Sign In / Create Account
+            </button>
+          </div>
+        ) : journalists.length === 0 ? (
           <div className="mb-8 rounded-2xl glass p-6 text-center">
             <p className="text-[var(--text-muted)]">
               Create a journalist profile first on the Desk tab.
@@ -226,7 +252,7 @@ export default function StudioPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {b.status === "scheduled" && (
+                    {currentUser && b.status === "scheduled" && (
                       <>
                         <button
                           type="button"
@@ -244,7 +270,7 @@ export default function StudioPage() {
                         </button>
                       </>
                     )}
-                    {b.status === "live" && (
+                    {currentUser && b.status === "live" && (
                       <button
                         type="button"
                         onClick={() => setStatus(b.id, "completed")}

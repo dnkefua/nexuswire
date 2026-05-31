@@ -5,8 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Header } from "@/components/Header";
 import type { Journalist } from "@/lib/types";
+import { useUser } from "@/context/UserContext";
 
 export default function JournalistsPage() {
+  const { currentUser, openAuth } = useUser();
   const [journalists, setJournalists] = useState<Journalist[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -33,8 +35,19 @@ export default function JournalistsPage() {
     load();
   }, [load]);
 
+  // Hide form if user logs out
+  useEffect(() => {
+    if (!currentUser) {
+      setShowForm(false);
+    }
+  }, [currentUser]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!currentUser) {
+      openAuth("login");
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch("/api/journalists", {
@@ -90,13 +103,26 @@ export default function JournalistsPage() {
 
       <section className="mx-auto max-w-6xl px-4 py-6">
         <div className="mb-6 flex items-center justify-between gap-4">
-          <p className="text-sm text-[var(--text-muted)]">
-            Create your profile, publish blogs & videos, connect TikTok, website RSS, and
-            more.
-          </p>
+          <div>
+            <p className="text-sm text-[var(--text-muted)]">
+              Create your profile, publish blogs & videos, connect TikTok, website RSS, and
+              more.
+            </p>
+            {!currentUser && (
+              <p className="text-xs text-[var(--gold)] mt-1 font-semibold">
+                ✦ Create an account or sign in to configure your news desk and publish stories.
+              </p>
+            )}
+          </div>
           <button
             type="button"
-            onClick={() => setShowForm(!showForm)}
+            onClick={() => {
+              if (!currentUser) {
+                openAuth("login");
+              } else {
+                setShowForm(!showForm);
+              }
+            }}
             className="btn-primary flex-shrink-0"
           >
             {showForm ? "Cancel" : "+ New Profile"}

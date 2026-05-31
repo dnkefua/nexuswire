@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { EngagementCounts, EngagementTarget } from "@/lib/types";
 import { getUserKey } from "@/lib/user-client";
+import { useUser } from "@/context/UserContext";
 
 interface EngagementBarProps {
   targetType: EngagementTarget;
@@ -15,6 +16,7 @@ export function EngagementBar({
   targetId,
   onCommentClick,
 }: EngagementBarProps) {
+  const { currentUser, openAuth } = useUser();
   const [engagement, setEngagement] = useState<EngagementCounts>({
     likes: 0,
     comments: 0,
@@ -27,7 +29,7 @@ export function EngagementBar({
     const params = new URLSearchParams({
       targetType,
       targetId,
-      userKey: getUserKey(),
+      userKey: currentUser ? getUserKey() : "guest",
     });
     fetch(`/api/likes?${params}`)
       .then((res) => res.json())
@@ -37,9 +39,13 @@ export function EngagementBar({
     return () => {
       ignore = true;
     };
-  }, [targetType, targetId]);
+  }, [targetType, targetId, currentUser]);
 
   async function toggleLike() {
+    if (!currentUser) {
+      openAuth("login");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/likes", {
