@@ -36,9 +36,5 @@ jobs:
           service_account: ${{ secrets.SERVICE_ACCOUNT_EMAIL }}
           create_credentials_file: true
 
-      - uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ steps.auth.outputs.credentials_file_path }}
-          projectId: nexuswire-app
-          channelId: live
+      - name: Deploy to Firebase Hosting
+        run: npx firebase-tools deploy --only hosting --project nexuswire-app
