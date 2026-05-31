@@ -14,7 +14,7 @@ export type ConnectedPlatform =
 
 export type ReviewType = "musician" | "blog" | "album" | "video";
 
-export type EngagementTarget = "post" | "review" | "video";
+export type EngagementTarget = "post" | "review" | "video" | "article";
 
 export interface NewsItem {
   id: string;

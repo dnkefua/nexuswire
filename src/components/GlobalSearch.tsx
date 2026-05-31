@@ -200,12 +200,23 @@ export function GlobalSearch() {
                 </p>
                 <ul className="space-y-2">
                   {items.map((item) => {
-                    const isVideo = !!item.videoId;
-                    const href = isVideo
-                      ? `/live?v=${item.videoId}&title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(item.source)}&summary=${encodeURIComponent(item.summary || "")}`
-                      : item.link;
-                    const target = isVideo ? undefined : "_blank";
-                    const rel = isVideo ? undefined : "noopener noreferrer";
+                    const isVideo = item.sourceType === "youtube";
+                    const isBlogOrRss = item.sourceType === "blog" || item.sourceType === "rss";
+
+                    let href = item.link;
+                    let target: string | undefined = "_blank";
+                    let rel: string | undefined = "noopener noreferrer";
+
+                    if (isVideo) {
+                      href = `/live?v=${item.videoId}&title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(item.source)}&summary=${encodeURIComponent(item.summary || "")}`;
+                      target = undefined;
+                      rel = undefined;
+                    } else if (isBlogOrRss) {
+                      href = `/read?id=${item.id}&title=${encodeURIComponent(item.title)}&summary=${encodeURIComponent(item.summary || "")}&image=${encodeURIComponent(item.image || "")}&source=${encodeURIComponent(item.source)}&link=${encodeURIComponent(item.link)}&publishedAt=${encodeURIComponent(item.publishedAt)}`;
+                      target = undefined;
+                      rel = undefined;
+                    }
+
                     return (
                       <li key={item.id}>
                         <a
