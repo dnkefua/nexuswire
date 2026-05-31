@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Comment, EngagementTarget } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
-import { getUserDisplayName, setUserDisplayName } from "@/lib/user-client";
+import { setUserDisplayName } from "@/lib/user-client";
 import { useUser } from "@/context/UserContext";
 
 interface CommentSectionProps {
@@ -15,16 +15,7 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
   const { currentUser, openAuth } = useUser();
   const [comments, setComments] = useState<Comment[]>([]);
   const [body, setBody] = useState("");
-  const [authorName, setAuthorName] = useState("");
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (currentUser && currentUser.username) {
-      setAuthorName(currentUser.username);
-    } else {
-      setAuthorName("");
-    }
-  }, [currentUser]);
 
   useEffect(() => {
     let ignore = false;
@@ -41,17 +32,17 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!currentUser || !body.trim() || !authorName.trim()) return;
+    if (!currentUser || !body.trim() || !currentUser.username) return;
     setSaving(true);
     try {
-      setUserDisplayName(authorName);
+      setUserDisplayName(currentUser.username);
       const res = await fetch("/api/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           targetType,
           targetId,
-          authorName,
+          authorName: currentUser.username,
           body,
         }),
       });
@@ -90,7 +81,7 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
       ) : (
         <form onSubmit={handleSubmit} className="mb-4 space-y-2">
           <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider px-1">
-            Commenting as <span className="text-[var(--gold)]">{authorName}</span>
+            Commenting as <span className="text-[var(--gold)]">{currentUser.username}</span>
           </div>
           <textarea
             rows={2}

@@ -35,12 +35,7 @@ export default function JournalistsPage() {
     load();
   }, [load]);
 
-  // Hide form if user logs out
-  useEffect(() => {
-    if (!currentUser) {
-      setShowForm(false);
-    }
-  }, [currentUser]);
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -125,11 +120,11 @@ export default function JournalistsPage() {
             }}
             className="btn-primary flex-shrink-0"
           >
-            {showForm ? "Cancel" : "+ New Profile"}
+            {showForm && currentUser ? "Cancel" : "+ New Profile"}
           </button>
         </div>
 
-        {showForm && (
+        {showForm && currentUser && (
           <form
             onSubmit={handleSubmit}
             className="mb-8 grid gap-4 rounded-2xl glass-strong p-6 md:grid-cols-2"

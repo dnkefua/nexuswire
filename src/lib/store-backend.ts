@@ -20,7 +20,7 @@ function storePath(): string {
   return path.join(DATA_DIR, "store.json");
 }
 
-export function useFirebaseStore(): boolean {
+export function shouldUseFirebaseStore(): boolean {
   return isFirebaseAdminConfigured();
 }
 
@@ -45,7 +45,7 @@ async function writeToFirestore(data: DataStore): Promise<void> {
 }
 
 export async function readDataStore(): Promise<DataStore | null> {
-  if (useFirebaseStore()) {
+  if (shouldUseFirebaseStore()) {
     try {
       return await readFromFirestore();
     } catch (e) {
@@ -63,7 +63,7 @@ export async function readDataStore(): Promise<DataStore | null> {
 }
 
 export async function writeDataStore(data: DataStore): Promise<void> {
-  if (useFirebaseStore()) {
+  if (shouldUseFirebaseStore()) {
     await writeToFirestore(data);
     return;
   }

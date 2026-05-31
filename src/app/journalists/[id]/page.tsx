@@ -45,13 +45,8 @@ export default function JournalistDeskPage() {
     () => typeof window !== "undefined" && getActiveJournalistId() === id
   );
 
-  // Deactivate desk if user logs out
-  useEffect(() => {
-    if (!currentUser) {
-      setIsActive(false);
-      setTab("posts");
-    }
-  }, [currentUser]);
+  const isDeskActive = isActive && !!currentUser;
+  const activeTab = currentUser ? tab : "posts";
 
   const [postForm, setPostForm] = useState({
     type: "blog" as PostType,
@@ -253,7 +248,7 @@ export default function JournalistDeskPage() {
               </div>
             </div>
             <div>
-              {!isActive ? (
+              {!isDeskActive ? (
                 <button type="button" onClick={activateDesk} className="btn-primary">
                   Manage as this journalist
                 </button>
@@ -273,7 +268,7 @@ export default function JournalistDeskPage() {
                 type="button"
                 onClick={() => setTab(t)}
                 className={`flex-shrink-0 rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-wider ${
-                  tab === t
+                  activeTab === t
                     ? "bg-[var(--accent)] text-white"
                     : "glass text-[var(--text-muted)]"
                 }`}
@@ -283,7 +278,7 @@ export default function JournalistDeskPage() {
             ))}
         </div>
 
-        {tab === "posts" && (
+        {activeTab === "posts" && (
           <div className="mt-6 space-y-4">
             {posts.length === 0 && (
               <p className="text-sm text-[var(--text-muted)]">
@@ -335,7 +330,7 @@ export default function JournalistDeskPage() {
           </div>
         )}
 
-        {tab === "publish" && isActive && (
+        {activeTab === "publish" && isDeskActive && (
           <form
             onSubmit={publishPost}
             className="mt-6 grid gap-4 rounded-2xl glass-strong p-6 md:grid-cols-2"
@@ -406,13 +401,13 @@ export default function JournalistDeskPage() {
           </form>
         )}
 
-        {tab === "publish" && !isActive && (
+        {activeTab === "publish" && !isDeskActive && (
           <p className="mt-6 text-sm text-[var(--text-muted)]">
             Activate this desk to publish content.
           </p>
         )}
 
-        {tab === "connect" && isActive && (
+        {activeTab === "connect" && isDeskActive && (
           <div className="mt-6 space-y-6">
             <form onSubmit={saveSocial} className="grid gap-4 rounded-2xl glass p-6 md:grid-cols-2">
               <h3 className="font-display md:col-span-2 text-sm font-bold tracking-widest text-[var(--gold)] uppercase">
@@ -521,7 +516,7 @@ export default function JournalistDeskPage() {
           </div>
         )}
 
-        {tab === "connect" && !isActive && (
+        {activeTab === "connect" && !isDeskActive && (
           <p className="mt-6 text-sm text-[var(--text-muted)]">
             Activate this desk to connect feeds and social accounts.
           </p>

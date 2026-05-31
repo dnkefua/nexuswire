@@ -258,11 +258,7 @@ function AuthModal() {
     }
   };
 
-  useEffect(() => {
-    setError("");
-    setUsername("");
-    setPassword("");
-  }, [authModalTab]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -324,7 +320,12 @@ function AuthModal() {
         <div className="flex border-b border-[var(--border)] mb-6">
           <button
             type="button"
-            onClick={() => openAuth("login")}
+            onClick={() => {
+              setError("");
+              setUsername("");
+              setPassword("");
+              openAuth("login");
+            }}
             className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider transition-colors ${
               authModalTab === "login"
                 ? "text-[var(--accent)] border-b-2 border-[var(--accent)]"
@@ -335,7 +336,12 @@ function AuthModal() {
           </button>
           <button
             type="button"
-            onClick={() => openAuth("register")}
+            onClick={() => {
+              setError("");
+              setUsername("");
+              setPassword("");
+              openAuth("register");
+            }}
             className={`flex-1 pb-3 text-xs font-bold uppercase tracking-wider transition-colors ${
               authModalTab === "register"
                 ? "text-[var(--accent)] border-b-2 border-[var(--accent)]"
@@ -434,9 +440,14 @@ function AuthModal() {
         <p className="mt-4 text-center text-[11px] text-[var(--text-muted)]">
           {authModalTab === "login" ? (
             <>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button 
-                onClick={() => openAuth("register")}
+                onClick={() => {
+                  setError("");
+                  setUsername("");
+                  setPassword("");
+                  openAuth("register");
+                }}
                 className="text-[var(--accent)] hover:underline font-bold"
               >
                 Sign Up
@@ -446,7 +457,12 @@ function AuthModal() {
             <>
               Already have an account?{" "}
               <button 
-                onClick={() => openAuth("login")}
+                onClick={() => {
+                  setError("");
+                  setUsername("");
+                  setPassword("");
+                  openAuth("login");
+                }}
                 className="text-[var(--accent)] hover:underline font-bold"
               >
                 Log In

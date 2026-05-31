@@ -8,7 +8,7 @@ import { StarRating } from "@/components/StarRating";
 import Link from "next/link";
 import type { JournalistPost, Review, ReviewType } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
-import { getUserDisplayName, setUserDisplayName } from "@/lib/user-client";
+import { setUserDisplayName } from "@/lib/user-client";
 import { useUser } from "@/context/UserContext";
 
 const TYPES: { id: ReviewType | "all"; label: string }[] = [
@@ -28,23 +28,12 @@ export default function CommunityPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
-    authorName: "",
     type: "musician" as ReviewType,
     subject: "",
     rating: 5,
     body: "",
     mediaUrl: "",
   });
-
-  // Sync author name with logged-in user
-  useEffect(() => {
-    if (currentUser && currentUser.username) {
-      setForm((f) => ({ ...f, authorName: currentUser.username }));
-    } else {
-      setForm((f) => ({ ...f, authorName: "" }));
-      setShowForm(false);
-    }
-  }, [currentUser]);
 
   const load = useCallback(async () => {
     const params = filter !== "all" ? `?type=${filter}` : "";
@@ -83,11 +72,16 @@ export default function CommunityPage() {
     }
     setSaving(true);
     try {
-      setUserDisplayName(form.authorName);
+      if (currentUser.username) {
+        setUserDisplayName(currentUser.username);
+      }
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          authorName: currentUser.username || "Anonymous",
+        }),
       });
       if (!res.ok) throw new Error("Failed");
       setShowForm(false);
@@ -160,7 +154,7 @@ export default function CommunityPage() {
               <input
                 required
                 disabled
-                value={form.authorName}
+                value={currentUser?.username || ""}
                 className="opacity-50 cursor-not-allowed bg-black/60"
               />
             </div>

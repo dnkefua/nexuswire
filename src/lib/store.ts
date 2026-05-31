@@ -14,7 +14,6 @@ import type {
   EngagementTarget,
   Journalist,
   JournalistPost,
-  Like,
   Review,
 } from "./types";
 
@@ -100,7 +99,7 @@ async function writeStore(data: DataStore): Promise<void> {
   await writeDataStore(data);
 }
 
-export { useFirebaseStore } from "./store-backend";
+export { shouldUseFirebaseStore } from "./store-backend";
 
 // —— Journalists ——
 
