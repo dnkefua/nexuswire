@@ -1,0 +1,58 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="nw_bg" x1="92" y1="64" x2="420" y2="448" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06101E"/>
+      <stop offset="1" stop-color="#030508"/>
+    </linearGradient>
+    <linearGradient id="nw_metal" x1="126" y1="96" x2="386" y2="416" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EAF7FF" stop-opacity="0.95"/>
+      <stop offset="0.22" stop-color="#B6D6E6" stop-opacity="0.65"/>
+      <stop offset="0.5" stop-color="#3B5870" stop-opacity="0.55"/>
+      <stop offset="0.78" stop-color="#0E1D2D" stop-opacity="0.85"/>
+      <stop offset="1" stop-color="#07111C"/>
+    </linearGradient>
+    <linearGradient id="nw_edge" x1="140" y1="110" x2="380" y2="414" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00E5FF"/>
+      <stop offset="0.55" stop-color="#8F7CFF"/>
+      <stop offset="1" stop-color="#E040FB"/>
+    </linearGradient>
+    <radialGradient id="nw_glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 210) rotate(90) scale(210)">
+      <stop stop-color="#00E5FF" stop-opacity="0.22"/>
+      <stop offset="0.55" stop-color="#E040FB" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="nw_shadow" x="52" y="52" width="408" height="448" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feOffset dy="18"/>
+      <feGaussianBlur stdDeviation="18"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0.9  0 0 0 0 1  0 0 0 0.18 0"/>
+      <feBlend mode="normal" in2="SourceGraphic" result="shape"/>
+    </filter>
+    <filter id="nw_bloom" x="78" y="66" width="356" height="410" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.55 0" result="bloom"/>
+      <feBlend mode="screen" in="SourceGraphic" in2="bloom"/>
+    </filter>
+  </defs>
+
+  <!-- backdrop -->
+  <rect x="64" y="64" width="384" height="384" rx="92" fill="url(#nw_bg)"/>
+  <rect x="78" y="78" width="356" height="356" rx="84" fill="url(#nw_glow)" opacity="0.85"/>
+
+  <!-- monogram (3D plate + edge) -->
+  <g filter="url(#nw_shadow)">
+    <!-- beveled base -->
+    <path d="M158 154C158 142.954 166.954 134 178 134H214C221.732 134 228.797 138.444 232.2 145.4L256 194.2L279.8 145.4C283.203 138.444 290.268 134 298 134H334C345.046 134 354 142.954 354 154V358C354 369.046 345.046 378 334 378H306C294.954 378 286 369.046 286 358V271.1L268.7 305.9C265.3 312.7 258.3 317 250.7 317H261.3C253.7 317 246.7 312.7 243.3 305.9L226 271.1V358C226 369.046 217.046 378 206 378H178C166.954 378 158 369.046 158 358V154Z" fill="url(#nw_metal)"/>
+
+    <!-- edge neon -->
+    <path d="M178 134H214C221.732 134 228.797 138.444 232.2 145.4L256 194.2L279.8 145.4C283.203 138.444 290.268 134 298 134H334C345.046 134 354 142.954 354 154V358C354 369.046 345.046 378 334 378H306C294.954 378 286 369.046 286 358V271.1L268.7 305.9C265.3 312.7 258.3 317 250.7 317H261.3C253.7 317 246.7 312.7 243.3 305.9L226 271.1V358C226 369.046 217.046 378 206 378H178C166.954 378 158 369.046 158 358V154C158 142.954 166.954 134 178 134Z" stroke="url(#nw_edge)" stroke-width="8" stroke-linejoin="round"/>
+
+    <!-- specular highlight -->
+    <path d="M194 156C194 151.582 197.582 148 202 148H210C214.418 148 218 151.582 218 156V332C218 336.418 214.418 340 210 340H202C197.582 340 194 336.418 194 332V156Z" fill="#FFFFFF" opacity="0.06"/>
+    <path d="M312 156C312 151.582 315.582 148 320 148H328C332.418 148 336 151.582 336 156V332C336 336.418 332.418 340 328 340H320C315.582 340 312 336.418 312 332V156Z" fill="#FFFFFF" opacity="0.04"/>
+  </g>
+
+  <!-- bloom edge -->
+  <g filter="url(#nw_bloom)">
+    <path d="M178 134H214C221.732 134 228.797 138.444 232.2 145.4L256 194.2L279.8 145.4C283.203 138.444 290.268 134 298 134H334C345.046 134 354 142.954 354 154V358C354 369.046 345.046 378 334 378H306C294.954 378 286 369.046 286 358V271.1L268.7 305.9C265.3 312.7 258.3 317 250.7 317H261.3C253.7 317 246.7 312.7 243.3 305.9L226 271.1V358C226 369.046 217.046 378 206 378H178C166.954 378 158 369.046 158 358V154C158 142.954 166.954 134 178 134Z" stroke="url(#nw_edge)" stroke-width="6" stroke-linejoin="round" opacity="0.55"/>
+  </g>
+</svg>

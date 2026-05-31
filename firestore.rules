@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Server-side Admin SDK bypasses these rules.
+    // Tighten before public client writes (require auth).
+    match /nexuswire/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
