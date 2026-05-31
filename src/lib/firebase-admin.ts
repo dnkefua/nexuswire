@@ -15,14 +15,20 @@ export function getFirebaseAdmin(): App {
     throw new Error("Firebase Admin is not configured. Set FIREBASE_* env variables.");
   }
 
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
-
-  return initializeApp({
-    credential: cert({
+  if (process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n");
+    return initializeApp({
+      credential: cert({
+        projectId: FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: privateKey,
+      }),
       projectId: FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-      privateKey: privateKey!,
-    }),
+    });
+  }
+
+  // Fallback to Application Default Credentials when running on Google Cloud Platform (e.g. Firebase App Hosting)
+  return initializeApp({
     projectId: FIREBASE_PROJECT_ID,
   });
 }
