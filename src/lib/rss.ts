@@ -48,7 +48,49 @@ function youtubeThumb(videoId: string): string {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 }
 
-function getYouTubeFallbacks(source: FeedSource, limit = 8): NewsItem[] {
+const liveIdCache: Record<string, { id: string; expires: number }> = {};
+
+async function getLiveVideoIdFromYouTube(handle: string): Promise<string | null> {
+  const now = Date.now();
+  if (liveIdCache[handle] && liveIdCache[handle].expires > now) {
+    return liveIdCache[handle].id;
+  }
+
+  try {
+    const url = `https://www.youtube.com/${handle}/live`;
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+    });
+    if (!res.ok) throw new Error(`HTTP status ${res.status}`);
+    const html = await res.text();
+
+    let videoId: string | null = null;
+    const canonicalMatch = html.match(/<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})"/);
+    if (canonicalMatch && canonicalMatch[1]) {
+      videoId = canonicalMatch[1];
+    } else {
+      const videoIdMatch = html.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
+      if (videoIdMatch && videoIdMatch[1]) {
+        videoId = videoIdMatch[1];
+      }
+    }
+
+    if (videoId) {
+      liveIdCache[handle] = {
+        id: videoId,
+        expires: now + 3600 * 1000, // Cache for 1 hour
+      };
+      return videoId;
+    }
+  } catch (e) {
+    console.error(`Failed to get live video ID for ${handle}:`, e);
+  }
+  return null;
+}
+
+async function getYouTubeFallbacks(source: FeedSource, limit = 8): Promise<NewsItem[]> {
   const fallbacks: Record<string, { title: string; videoId: string; summary: string }[]> = {
     "youtube-bbc": [
       {
@@ -92,13 +134,29 @@ function getYouTubeFallbacks(source: FeedSource, limit = 8): NewsItem[] {
     ]
   };
 
-  const list = fallbacks[source.id] || [
+  const list = [...(fallbacks[source.id] || [
     {
       title: `${source.name} Video Update`,
       videoId: "h3MuIUNMwzI",
       summary: "Reporting and video feed update from our international broadcast partners."
     }
-  ];
+  ])];
+
+  const handles: Record<string, string> = {
+    "youtube-bbc": "@BBCNews",
+    "youtube-france24": "@France24_en",
+  };
+
+  const handle = handles[source.id];
+  if (handle) {
+    const liveId = await getLiveVideoIdFromYouTube(handle);
+    if (liveId && list[0]) {
+      list[0] = {
+        ...list[0],
+        videoId: liveId,
+      };
+    }
+  }
 
   return list.slice(0, limit).map((v, i) => {
     const link = `https://www.youtube.com/watch?v=${v.videoId}`;
@@ -164,7 +222,7 @@ export async function fetchFeed(
   }
 
   if (source.type === "youtube") {
-    return getYouTubeFallbacks(source, limit);
+    return await getYouTubeFallbacks(source, limit);
   }
   return [];
 }

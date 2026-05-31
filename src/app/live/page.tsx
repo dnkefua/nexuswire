@@ -18,9 +18,47 @@ export default function LivePage() {
       .then((r) => r.json())
       .then((d) => {
         const items = d.items || [];
-        setVideos(items);
-        setActive(items[0] || null);
+        
+        // Parse URL search parameters for custom video ID reference
+        const params = new URLSearchParams(window.location.search);
+        const queryVideoId = params.get("v") || params.get("id");
+        
+        if (queryVideoId) {
+          const found = items.find((v: NewsItem) => v.videoId === queryVideoId);
+          if (found) {
+            setVideos(items);
+            setActive(found);
+          } else {
+            const title = params.get("title") || "Selected Video";
+            const source = params.get("source") || "Video Feed";
+            const summary = params.get("summary") || "Watching selected video inside the live player.";
+            
+            const tempItem: NewsItem = {
+              id: `temp-${queryVideoId}`,
+              title: decodeURIComponent(title),
+              summary: decodeURIComponent(summary),
+              link: `https://www.youtube.com/watch?v=${queryVideoId}`,
+              image: `https://i.ytimg.com/vi/${queryVideoId}/hqdefault.jpg`,
+              source: decodeURIComponent(source),
+              sourceType: "youtube",
+              category: "Live",
+              region: "Global",
+              country: "Global",
+              publishedAt: new Date().toISOString(),
+              author: decodeURIComponent(source),
+              isLive: true,
+              videoId: queryVideoId,
+            };
+            
+            setVideos([tempItem, ...items]);
+            setActive(tempItem);
+          }
+        } else {
+          setVideos(items);
+          setActive(items[0] || null);
+        }
       })
+      .catch((err) => console.error("Failed to load videos:", err))
       .finally(() => setLoading(false));
   }, []);
 

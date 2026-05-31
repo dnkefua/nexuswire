@@ -200,15 +200,18 @@ export function GlobalSearch() {
                 </p>
                 <ul className="space-y-2">
                   {items.map((item) => {
-                    const href = item.videoId
-                      ? `https://www.youtube.com/watch?v=${item.videoId}`
+                    const isVideo = !!item.videoId;
+                    const href = isVideo
+                      ? `/live?v=${item.videoId}&title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(item.source)}&summary=${encodeURIComponent(item.summary || "")}`
                       : item.link;
+                    const target = isVideo ? undefined : "_blank";
+                    const rel = isVideo ? undefined : "noopener noreferrer";
                     return (
                       <li key={item.id}>
                         <a
                           href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          target={target}
+                          rel={rel}
                           onClick={closeSearch}
                           className="flex gap-3 rounded-xl p-3 transition-all glass hover:glow-border"
                         >

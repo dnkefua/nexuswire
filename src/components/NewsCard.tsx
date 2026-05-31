@@ -17,15 +17,18 @@ function typeChip(type: NewsItem["sourceType"]) {
 }
 
 export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
-  const href = item.videoId
-    ? `https://www.youtube.com/watch?v=${item.videoId}`
+  const isVideo = !!item.videoId;
+  const href = isVideo
+    ? `/live?v=${item.videoId}&title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(item.source)}&summary=${encodeURIComponent(item.summary || "")}`
     : item.link;
+  const target = isVideo ? undefined : "_blank";
+  const rel = isVideo ? undefined : "noopener noreferrer";
 
   return (
     <a
       href={href}
-      target="_blank"
-      rel="noopener noreferrer"
+      target={target}
+      rel={rel}
       className={cn(
         "group block overflow-hidden rounded-2xl glass transition-all hover:glow-border fade-up",
         featured ? "col-span-full" : ""
