@@ -1,11 +1,41 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Server-side Admin SDK bypasses these rules.
-    // Tighten before public client writes (require auth).
+    // All writes go through the Admin SDK (server-side), which bypasses these
+    // rules. Client SDK access is read-only for public content and fully
+    // denied for private collections (reports, commentReports).
+
+    // Legacy single-document store (read-only for clients)
     match /nexuswire/{document=**} {
       allow read: if true;
       allow write: if false;
+    }
+
+    // Public, server-written collections — readable, never client-writable.
+    // All writes go through the Admin SDK (ingestion / cron / admin actions).
+    match /sources/{sourceId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /articles/{articleId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /storyClusters/{clusterId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /videos/{videoId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Private collections — no client access at all (server/admin only)
+    match /reports/{reportId} {
+      allow read, write: if false;
+    }
+    match /commentReports/{reportId} {
+      allow read, write: if false;
     }
   }
 }

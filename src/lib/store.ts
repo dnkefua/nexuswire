@@ -260,22 +260,49 @@ export async function listComments(
 ): Promise<Comment[]> {
   const store = await readStore();
   return store.comments
-    .filter((c) => c.targetType === targetType && c.targetId === targetId)
+    .filter(
+      (c) =>
+        c.targetType === targetType &&
+        c.targetId === targetId &&
+        c.status !== "hidden" &&
+        c.status !== "reported"
+    )
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
 export async function createComment(
-  input: Omit<Comment, "id" | "createdAt">
+  input: Omit<Comment, "id" | "createdAt" | "status" | "reportCount">
 ): Promise<Comment> {
   const store = await readStore();
   const comment: Comment = {
     ...input,
     id: uuidv4(),
+    status: "approved",
+    reportCount: 0,
     createdAt: new Date().toISOString(),
   };
   store.comments.unshift(comment);
   await writeStore(store);
   return comment;
+}
+
+export async function reportComment(
+  commentId: string,
+  threshold: number
+): Promise<{ ok: boolean; reportCount: number }> {
+  const store = await readStore();
+  const idx = store.comments.findIndex((c) => c.id === commentId);
+  if (idx === -1) return { ok: false, reportCount: 0 };
+  const current = store.comments[idx];
+  const reportCount = (current.reportCount ?? 0) + 1;
+  store.comments[idx] = {
+    ...current,
+    reportCount,
+    status: reportCount >= threshold ? "reported" : current.status,
+    updatedAt: new Date().toISOString(),
+  };
+  await writeStore(store);
+  return { ok: true, reportCount };
 }
 
 // —— Likes ——

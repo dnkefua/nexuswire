@@ -4,8 +4,15 @@ import { useEffect, useState } from "react";
 import type { NewsItem } from "@/lib/types";
 import { NewsCard } from "./NewsCard";
 import { Ticker } from "./Ticker";
+import Link from "next/link";
 
-const CATEGORIES = ["All", "World", "Technology", "Business", "Live"];
+const CATEGORIES = ["All", "Top Stories", "Politics", "Business", "Markets", "Technology", "Startups", "Fintech", "Sports", "Health", "Energy", "Security", "Entertainment", "Francophone Africa", "Video News"];
+const SOURCE_TYPES = [
+  { label: "All Types", value: "" },
+  { label: "RSS", value: "rss" },
+  { label: "Blogs", value: "blog" },
+  { label: "YouTube", value: "youtube" },
+];
 
 export function NewsFeed() {
   const [items, setItems] = useState<NewsItem[]>([]);
@@ -13,6 +20,8 @@ export function NewsFeed() {
   const [filterType, setFilterType] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [broaden, setBroaden] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -25,9 +34,14 @@ export function NewsFeed() {
         if (category !== "All") params.set("category", category);
         if (filterType) params.set("type", filterType);
         const res = await fetch(`/api/news?${params}`);
-        const data = await res.json();
+        const data = await res.json() as { items?: NewsItem[]; error?: string };
         if (!res.ok) throw new Error(data.error || "Failed to load");
-        if (!ignore) setItems(data.items || []);
+        if (!ignore) {
+          // When "Broaden my view" is active, shuffle by region
+          const all = data.items || [];
+          setItems(broaden ? broadenFeed(all) : all);
+          setLastUpdated(new Date());
+        }
       } catch (e) {
         if (!ignore) {
           setError(e instanceof Error ? e.message : "Could not load feeds");
@@ -39,10 +53,8 @@ export function NewsFeed() {
     }
 
     void load();
-    return () => {
-      ignore = true;
-    };
-  }, [category, filterType]);
+    return () => { ignore = true; };
+  }, [category, filterType, broaden]);
 
   async function refresh() {
     setLoading(true);
@@ -52,9 +64,11 @@ export function NewsFeed() {
       if (category !== "All") params.set("category", category);
       if (filterType) params.set("type", filterType);
       const res = await fetch(`/api/news?${params}`);
-      const data = await res.json();
+      const data = await res.json() as { items?: NewsItem[]; error?: string };
       if (!res.ok) throw new Error(data.error || "Failed to load");
-      setItems(data.items || []);
+      const all = data.items || [];
+      setItems(broaden ? broadenFeed(all) : all);
+      setLastUpdated(new Date());
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load feeds");
       setItems([]);
@@ -71,21 +85,41 @@ export function NewsFeed() {
       <Ticker items={items} />
 
       <section className="mx-auto max-w-6xl px-4 py-6">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {/* Header */}
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="font-display text-lg font-bold tracking-wide uppercase glow-text">
               <span className="brand-nexus">Global </span>
               <span className="brand-wire">Wire</span>
             </h2>
             <p className="text-sm text-[var(--text-muted)]">
-              Aggregated from RSS, blogs & YouTube — refreshed live
+              Source-attributed previews from RSS, blogs &amp; YouTube
             </p>
+            {lastUpdated && (
+              <p className="text-[10px] text-[var(--text-muted)]/60 mt-0.5">
+                Updated {lastUpdated.toLocaleTimeString()} · {items.length} stories
+              </p>
+            )}
           </div>
-            <button type="button" onClick={refresh} className="btn-ghost w-fit">
-            ↻ Refresh
-          </button>
+          <div className="flex flex-wrap gap-2 items-center">
+            <button
+              type="button"
+              onClick={() => setBroaden((v) => !v)}
+              className={`chip cursor-pointer transition-all ${broaden ? "chip-blog" : ""}`}
+              title="Diversify feed by region and source"
+            >
+              🌍 Broaden my view
+            </button>
+            <button type="button" onClick={refresh} className="btn-ghost">
+              ↻ Refresh
+            </button>
+            <Link href="/search" className="btn-ghost text-xs">
+              ⌕ Search
+            </Link>
+          </div>
         </div>
 
+        {/* Category filter */}
         <div className="mb-4 flex gap-2 overflow-x-auto scroll-hide pb-1">
           {CATEGORIES.map((cat) => (
             <button
@@ -103,13 +137,9 @@ export function NewsFeed() {
           ))}
         </div>
 
-        <div className="mb-6 flex gap-2">
-          {[
-            { label: "All Types", value: "" },
-            { label: "RSS", value: "rss" },
-            { label: "Blogs", value: "blog" },
-            { label: "YouTube", value: "youtube" },
-          ].map((t) => (
+        {/* Type filter */}
+        <div className="mb-6 flex gap-2 flex-wrap">
+          {SOURCE_TYPES.map((t) => (
             <button
               key={t.value}
               type="button"
@@ -123,6 +153,7 @@ export function NewsFeed() {
           ))}
         </div>
 
+        {/* Loading skeleton */}
         {loading && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((n) => (
@@ -135,6 +166,7 @@ export function NewsFeed() {
           </div>
         )}
 
+        {/* Error state */}
         {error && !loading && (
           <div className="rounded-2xl glass p-8 text-center">
             <p className="text-[var(--danger)]">{error}</p>
@@ -144,12 +176,14 @@ export function NewsFeed() {
           </div>
         )}
 
+        {/* Empty state */}
         {!loading && !error && items.length === 0 && (
           <div className="rounded-2xl glass p-12 text-center text-[var(--text-muted)]">
             No stories in this category. Try another filter.
           </div>
         )}
 
+        {/* Feed grid */}
         {!loading && !error && items.length > 0 && (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {featured && (
@@ -162,7 +196,40 @@ export function NewsFeed() {
             ))}
           </div>
         )}
+
+        {/* Trust footer */}
+        {!loading && items.length > 0 && (
+          <div className="mt-8 flex flex-wrap gap-4 justify-center text-[10px] text-[var(--text-muted)]/60 text-center">
+            <Link href="/editorial-policy" className="hover:text-[var(--accent)] transition-colors">Editorial Policy</Link>
+            <Link href="/source-policy" className="hover:text-[var(--accent)] transition-colors">Source Policy</Link>
+            <Link href="/corrections" className="hover:text-[var(--accent)] transition-colors">Corrections</Link>
+            <Link href="/dmca" className="hover:text-[var(--accent)] transition-colors">DMCA</Link>
+            <Link href="/privacy" className="hover:text-[var(--accent)] transition-colors">Privacy</Link>
+            <Link href="/about" className="hover:text-[var(--accent)] transition-colors">About</Link>
+          </div>
+        )}
       </section>
     </>
   );
+}
+
+/** Interleave items by region for feed diversity */
+function broadenFeed(items: NewsItem[]): NewsItem[] {
+  const byRegion: Record<string, NewsItem[]> = {};
+  for (const item of items) {
+    const r = item.region || "Global";
+    if (!byRegion[r]) byRegion[r] = [];
+    byRegion[r].push(item);
+  }
+  const regions = Object.keys(byRegion);
+  const result: NewsItem[] = [];
+  let i = 0;
+  while (result.length < items.length) {
+    const region = regions[i % regions.length];
+    const item = byRegion[region]?.shift();
+    if (item) result.push(item);
+    i++;
+    if (regions.every((r) => (byRegion[r]?.length ?? 0) === 0)) break;
+  }
+  return result;
 }

@@ -9,8 +9,8 @@ const links = [
   { href: "/", label: "Wire", icon: "◈" },
   { href: "/live", label: "Live", icon: "◎" },
   { href: "__search__", label: "Search", icon: "⌕" },
+  { href: "/saved", label: "Saved", icon: "☆" },
   { href: "/journalists", label: "Desk", icon: "◇" },
-  { href: "/community", label: "Reviews", icon: "★" },
   { href: "/studio", label: "Studio", icon: "▣" },
 ];
 

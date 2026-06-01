@@ -31,6 +31,9 @@ export interface NewsItem {
   author?: string;
   isLive?: boolean;
   videoId?: string;
+  credibilityScore?: number;
+  /** True when discovered via Google News RSS rather than a direct publisher feed. */
+  viaDiscovery?: boolean;
 }
 
 export interface JournalistSocial {
@@ -87,13 +90,74 @@ export interface Review {
   createdAt: string;
 }
 
+export type CommentStatus = "pending" | "approved" | "hidden" | "reported";
+
 export interface Comment {
   id: string;
   targetType: EngagementTarget;
   targetId: string;
+  uid?: string;
   authorName: string;
   body: string;
+  status?: CommentStatus;
   createdAt: string;
+  updatedAt?: string;
+  reportCount?: number;
+}
+
+export interface ContentReport {
+  id: string;
+  url: string;
+  title?: string;
+  source?: string;
+  reason: string;
+  email?: string;
+  details?: string;
+  status: "pending" | "reviewed" | "resolved";
+  createdAt: string;
+}
+
+export interface NormalizedArticle {
+  id: string;
+  canonicalUrl: string;
+  title: string;
+  summary?: string;
+  image?: string;
+  sourceId: string;
+  sourceName: string;
+  sourceType: NewsSourceType;
+  category: string;
+  region?: string;
+  country?: string;
+  author?: string;
+  publishedAt: string;
+  fetchedAt: string;
+  originalFeedUrl?: string;
+  originalLink: string;
+  contentOwnership: "third_party";
+  previewOnly: true;
+  status: "active" | "hidden" | "reported" | "removed";
+  credibilityScore?: number;
+  viaDiscovery?: boolean;
+  videoId?: string;
+  isLive?: boolean;
+}
+
+export interface SourceHealth {
+  id: string;
+  name: string;
+  url: string;
+  type: NewsSourceType;
+  category: string;
+  region: string;
+  country: string;
+  active: boolean;
+  trusted: boolean;
+  lastFetchedAt?: string;
+  lastSuccessfulFetchAt?: string;
+  lastError?: string;
+  errorCount?: number;
+  articlesFetched?: number;
 }
 
 export interface Like {
@@ -125,6 +189,8 @@ export interface FeedSource {
   category: string;
   region: string;
   country: string;
+  credibilityScore?: number;
+  googleNews?: boolean;
 }
 
 export interface EngagementCounts {

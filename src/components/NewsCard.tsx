@@ -3,17 +3,12 @@
 import Image from "next/image";
 import type { NewsItem } from "@/lib/types";
 import { timeAgo, cn } from "@/lib/utils";
+import { SourceBadge } from "./SourceBadge";
 
 interface NewsCardProps {
   item: NewsItem;
   featured?: boolean;
   index?: number;
-}
-
-function typeChip(type: NewsItem["sourceType"]) {
-  if (type === "youtube") return "chip-youtube";
-  if (type === "blog") return "chip-blog";
-  return "chip-rss";
 }
 
 export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
@@ -29,7 +24,20 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
     target = undefined;
     rel = undefined;
   } else if (isBlogOrRss) {
-    href = `/read?id=${item.id}&title=${encodeURIComponent(item.title)}&summary=${encodeURIComponent(item.summary || "")}&image=${encodeURIComponent(item.image || "")}&source=${encodeURIComponent(item.source)}&link=${encodeURIComponent(item.link)}&publishedAt=${encodeURIComponent(item.publishedAt)}`;
+    const params = new URLSearchParams({
+      id: item.id,
+      title: item.title,
+      summary: item.summary || "",
+      image: item.image || "",
+      source: item.source,
+      link: item.link,
+      publishedAt: item.publishedAt,
+      sourceType: item.sourceType,
+      category: item.category,
+      region: item.region || "",
+      country: item.country || "",
+    });
+    href = `/read?${params}`;
     target = undefined;
     rel = undefined;
   }
@@ -67,14 +75,17 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
               Video Feed
             </span>
           )}
+          {/* Preview badge overlay */}
+          {isBlogOrRss && (
+            <span className="absolute bottom-3 right-3 text-[9px] font-bold uppercase tracking-wider bg-black/60 backdrop-blur-sm text-[var(--gold)] px-2 py-1 rounded-md border border-[var(--gold)]/30">
+              Preview
+            </span>
+          )}
         </div>
       )}
       <div className={cn("p-4", !item.image && "pt-5")}>
-        <div className="mb-2 flex flex-wrap items-center gap-2">
-          <span className={cn("chip", typeChip(item.sourceType))}>
-            {item.sourceType}
-          </span>
-          <span className="chip">{item.category}</span>
+        <div className="mb-2">
+          <SourceBadge type={item.sourceType} />
         </div>
         <h3
           className={cn(
@@ -89,10 +100,16 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
             {item.summary}
           </p>
         )}
-        <div className="mt-3 flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-[var(--text-muted)]">
           <span className="font-medium text-[var(--accent-dim)]">{item.source}</span>
           <span>·</span>
           <span>{timeAgo(item.publishedAt)}</span>
+          {item.country && item.country !== "Global" && (
+            <>
+              <span>·</span>
+              <span className="text-[var(--text-muted)]/60">{item.country} publisher</span>
+            </>
+          )}
         </div>
       </div>
     </a>

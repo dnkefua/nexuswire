@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Comment, EngagementTarget } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
-import { setUserDisplayName } from "@/lib/user-client";
+import { setUserDisplayName, authHeaders } from "@/lib/user-client";
 import { useUser } from "@/context/UserContext";
 
 interface CommentSectionProps {
@@ -38,24 +38,40 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
       setUserDisplayName(currentUser.username);
       const res = await fetch("/api/comments", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({
           targetType,
           targetId,
-          authorName: currentUser.username,
           body,
         }),
       });
-      if (!res.ok) throw new Error("Failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error || "Failed");
+      }
       setBody("");
       const params = new URLSearchParams({ targetType, targetId });
       const refreshed = await fetch(`/api/comments?${params}`);
       const refreshedData = await refreshed.json();
       setComments(refreshedData.comments || []);
-    } catch {
-      alert("Could not post comment");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not post comment");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleReport(commentId: string) {
+    if (!confirm("Report this comment for review?")) return;
+    try {
+      await fetch("/api/comments/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId, targetType, targetId, reason: "abuse" }),
+      });
+      alert("Thank you. This comment has been reported for review.");
+    } catch {
+      // ignore
     }
   }
 
@@ -100,12 +116,22 @@ export function CommentSection({ targetType, targetId }: CommentSectionProps) {
           <p className="text-sm text-[var(--text-muted)]">No comments yet. Be the first.</p>
         )}
         {comments.map((c) => (
-          <li key={c.id} className="rounded-xl glass p-3">
+          <li key={c.id} className="rounded-xl glass p-3 group">
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs font-bold text-[var(--accent)]">{c.authorName}</span>
-              <span className="text-[10px] text-[var(--text-muted)]">
-                {timeAgo(c.createdAt)}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-[var(--text-muted)]">
+                  {timeAgo(c.createdAt)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleReport(c.id)}
+                  title="Report comment"
+                  className="text-[10px] text-[var(--text-muted)] opacity-0 group-hover:opacity-100 hover:text-[var(--danger)] transition-all"
+                >
+                  ⚑
+                </button>
+              </div>
             </div>
             <p className="mt-1 text-sm text-[var(--text-primary)]">{c.body}</p>
           </li>

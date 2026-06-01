@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { EngagementCounts, EngagementTarget } from "@/lib/types";
-import { getUserKey } from "@/lib/user-client";
+import { getUserKey, authHeaders } from "@/lib/user-client";
 import { useUser } from "@/context/UserContext";
 
 interface EngagementBarProps {
@@ -50,7 +50,7 @@ export function EngagementBar({
     try {
       const res = await fetch("/api/likes", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await authHeaders(),
         body: JSON.stringify({
           targetType,
           targetId,

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEngagement, toggleLike } from "@/lib/store";
+import { getUserFromRequest } from "@/lib/auth-server";
+import { rateLimit } from "@/lib/rate-limit";
 import type { EngagementTarget } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
@@ -12,7 +14,10 @@ export async function GET(request: NextRequest) {
       { status: 400 }
     );
   }
-  const engagement = await getEngagement(targetType, targetId, userKey);
+  // Prefer verified identity when a token is present
+  const user = await getUserFromRequest(request);
+  const resolvedKey = user ? `uid:${user.uid}` : userKey;
+  const engagement = await getEngagement(targetType, targetId, resolvedKey);
   return NextResponse.json({ engagement });
 }
 
@@ -20,13 +25,25 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { targetType, targetId, userKey } = body;
-    if (!targetType || !targetId || !userKey) {
+    if (!targetType || !targetId) {
       return NextResponse.json(
-        { error: "targetType, targetId, and userKey required" },
+        { error: "targetType and targetId required" },
         { status: 400 }
       );
     }
-    const engagement = await toggleLike(targetType, targetId, userKey);
+
+    // Prefer the verified Firebase uid; fall back to client key only when no token.
+    const user = await getUserFromRequest(request);
+    const resolvedKey = user ? `uid:${user.uid}` : userKey;
+    if (!resolvedKey) {
+      return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+    }
+
+    if (!rateLimit(`like:${resolvedKey}`, 30, 60_000)) {
+      return NextResponse.json({ error: "Too many actions. Please slow down." }, { status: 429 });
+    }
+
+    const engagement = await toggleLike(targetType, targetId, resolvedKey);
     return NextResponse.json({ engagement });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Like failed";

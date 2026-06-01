@@ -35,6 +35,33 @@ export function getUserKey(): string {
   return `user:${name.toLowerCase().replace(/\s+/g, "-")}`;
 }
 
+/**
+ * Returns the current Firebase ID token if a Firebase session is active,
+ * or null otherwise (dev/mock mode). Used to authenticate API requests.
+ */
+export async function getIdToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const { getFirebaseClientApp } = await import("./firebase-client");
+    const app = getFirebaseClientApp();
+    if (!app) return null;
+    const { getAuth } = await import("firebase/auth");
+    const user = getAuth(app).currentUser;
+    if (!user) return null;
+    return await user.getIdToken();
+  } catch {
+    return null;
+  }
+}
+
+/** Builds fetch headers including the Authorization bearer token when available. */
+export async function authHeaders(): Promise<HeadersInit> {
+  const token = await getIdToken();
+  return token
+    ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+    : { "Content-Type": "application/json" };
+}
+
 export function getActiveJournalistId(): string | null {
   if (typeof window === "undefined") return null;
   try {
