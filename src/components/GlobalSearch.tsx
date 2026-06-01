@@ -233,7 +233,9 @@ export function GlobalSearch() {
                                 alt=""
                                 fill
                                 className="object-cover"
-                                unoptimized
+                                sizes="80px"
+                                quality={58}
+                                unoptimized={item.image.startsWith("http")}
                               />
                             </div>
                           )}

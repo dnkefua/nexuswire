@@ -47,7 +47,8 @@ export function BrandLogo({
           height={sizes.img}
           className="h-full w-full object-contain"
           priority={variant !== "icon"}
-          unoptimized
+          sizes={variant === "hero" ? "176px" : "56px"}
+          quality={82}
         />
       </div>
 

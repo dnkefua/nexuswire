@@ -6,6 +6,47 @@ interface User {
   username: string;
 }
 
+function authErrorMessage(error: unknown, action: "login" | "register" | "google"): string {
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code?: unknown }).code)
+      : "";
+
+  switch (code) {
+    case "auth/invalid-credential":
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+      return "Invalid username/email or password.";
+    case "auth/email-already-in-use":
+      return "That account already exists. Try signing in instead.";
+    case "auth/weak-password":
+      return "Password must be at least 6 characters.";
+    case "auth/operation-not-allowed":
+      return "This sign-in method is not enabled in Firebase Authentication.";
+    case "auth/unauthorized-domain":
+      return "This domain is not authorized for Firebase sign-in yet.";
+    case "auth/popup-blocked":
+    case "auth/popup-closed-by-user":
+      return "Google sign-in was blocked or closed. Try again, or use email and password.";
+    case "auth/redirect-cancelled-by-user":
+      return "Google sign-in was cancelled.";
+    case "auth/network-request-failed":
+      return "Network error while contacting Firebase. Check the connection and try again.";
+    case "auth/web-storage-unsupported":
+      return "This browser does not allow the storage Firebase Auth needs.";
+    default:
+      if (action === "google") {
+        return "Google sign-in could not complete in this browser. Use email and password, or try again from the web app.";
+      }
+      return action === "register" ? "Account creation failed. Please try again." : "Sign-in failed. Please try again.";
+  }
+}
+
+function toFirebaseEmail(value: string) {
+  const trimmed = value.trim();
+  return trimmed.includes("@") ? trimmed : `${trimmed}@nexuswire.com`;
+}
+
 interface UserContextType {
   currentUser: User | null;
   isAuthModalOpen: boolean;
@@ -120,8 +161,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const { getAuth, signInWithEmailAndPassword } = await import("firebase/auth");
       const auth = getAuth(app);
       
-      // Auto-append domain for raw handles so it functions as a valid Firebase email
-      const email = username.includes("@") ? username.trim() : `${username.trim()}@nexuswire.com`;
+      // Auto-append domain for raw handles so it functions as a valid Firebase email.
+      const email = toFirebaseEmail(username);
       await signInWithEmailAndPassword(auth, email, password);
       setIsAuthModalOpen(false);
       return true;
@@ -142,7 +183,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const { getAuth, createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth");
       const auth = getAuth(app);
       
-      const email = username.includes("@") ? username.trim() : `${username.trim()}@nexuswire.com`;
+      const email = toFirebaseEmail(username);
       const result = await createUserWithEmailAndPassword(auth, email, password);
       
       await updateProfile(result.user, {
@@ -170,10 +211,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const { getAuth, signInWithPopup, GoogleAuthProvider } = await import("firebase/auth");
+      const { getAuth, signInWithPopup, signInWithRedirect, GoogleAuthProvider } = await import("firebase/auth");
       const auth = getAuth(app);
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      try {
+        await signInWithPopup(auth, provider);
+      } catch (err) {
+        const code =
+          typeof err === "object" && err !== null && "code" in err
+            ? String((err as { code?: unknown }).code)
+            : "";
+        if (code === "auth/popup-blocked" || code === "auth/popup-closed-by-user") {
+          await signInWithRedirect(auth, provider);
+        } else {
+          throw err;
+        }
+      }
       setIsAuthModalOpen(false);
       return true;
     } catch (err) {
@@ -252,7 +305,7 @@ function AuthModal() {
     try {
       await signInWithGoogle();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Google Sign-In failed");
+      setError(authErrorMessage(err, "google"));
     } finally {
       setLoading(false);
     }
@@ -282,8 +335,8 @@ function AuthModal() {
           setError("Username already taken");
         }
       }
-    } catch {
-      setError("An unexpected error occurred");
+    } catch (err) {
+      setError(authErrorMessage(err, authModalTab === "login" ? "login" : "register"));
     } finally {
       setLoading(false);
     }

@@ -14,6 +14,8 @@ interface NewsCardProps {
 export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
   const isVideo = item.sourceType === "youtube";
   const isBlogOrRss = item.sourceType === "blog" || item.sourceType === "rss";
+  const isRemoteImage = item.image?.startsWith("http");
+  const eagerImage = featured || index < 3;
 
   let href = item.link;
   let target: string | undefined = "_blank";
@@ -65,8 +67,11 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
             alt=""
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
-            sizes={featured ? "100vw" : "400px"}
-            unoptimized
+            sizes={featured ? "(max-width: 768px) 100vw, 1152px" : "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 384px"}
+            priority={eagerImage}
+            loading={eagerImage ? undefined : "lazy"}
+            quality={featured ? 78 : 68}
+            unoptimized={isRemoteImage}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#030508] via-transparent to-transparent" />
           {item.isLive && (

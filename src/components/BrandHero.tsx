@@ -2,14 +2,18 @@
 
 import { BrandLogo } from "@/components/BrandLogo";
 
+const INTRO_EVENT = "nexuswire-intro-update";
+const FORCE_INTRO_KEY = "nexuswire-force-intro";
+
 export function BrandHero() {
   function replayIntro() {
     try {
+      sessionStorage.setItem(FORCE_INTRO_KEY, "1");
       sessionStorage.removeItem("nexuswire-intro-seen");
+      window.dispatchEvent(new Event(INTRO_EVENT));
     } catch {
       /* ignore */
     }
-    window.location.reload();
   }
   return (
     <section className="brand-hero relative mx-auto max-w-6xl px-4 pt-6 pb-2">

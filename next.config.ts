@@ -1,8 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  compress: true,
+  poweredByHeader: false,
   serverExternalPackages: ["firebase-admin"],
   images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
     remotePatterns: [
       { protocol: "https", hostname: "i.ytimg.com" },
       { protocol: "https", hostname: "images.unsplash.com" },
@@ -13,7 +17,6 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "**.aljazeera.com" },
       { protocol: "https", hostname: "**.techcrunch.com" },
     ],
-    unoptimized: true,
   },
 };
 

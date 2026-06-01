@@ -25,6 +25,7 @@ export function NewsFeed() {
 
   useEffect(() => {
     let ignore = false;
+    const controller = new AbortController();
 
     async function load() {
       setLoading(true);
@@ -33,7 +34,7 @@ export function NewsFeed() {
         const params = new URLSearchParams({ limit: "40" });
         if (category !== "All") params.set("category", category);
         if (filterType) params.set("type", filterType);
-        const res = await fetch(`/api/news?${params}`);
+        const res = await fetch(`/api/news?${params}`, { signal: controller.signal });
         const data = await res.json() as { items?: NewsItem[]; error?: string };
         if (!res.ok) throw new Error(data.error || "Failed to load");
         if (!ignore) {
@@ -43,6 +44,7 @@ export function NewsFeed() {
           setLastUpdated(new Date());
         }
       } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
         if (!ignore) {
           setError(e instanceof Error ? e.message : "Could not load feeds");
           setItems([]);
@@ -53,7 +55,10 @@ export function NewsFeed() {
     }
 
     void load();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
   }, [category, filterType, broaden]);
 
   async function refresh() {
@@ -105,12 +110,13 @@ export function NewsFeed() {
             <button
               type="button"
               onClick={() => setBroaden((v) => !v)}
+              aria-pressed={broaden}
               className={`chip cursor-pointer transition-all ${broaden ? "chip-blog" : ""}`}
               title="Diversify feed by region and source"
             >
               🌍 Broaden my view
             </button>
-            <button type="button" onClick={refresh} className="btn-ghost">
+            <button type="button" onClick={refresh} className="btn-ghost disabled:cursor-wait disabled:opacity-60" disabled={loading}>
               ↻ Refresh
             </button>
             <Link href="/search" className="btn-ghost text-xs">
@@ -126,6 +132,7 @@ export function NewsFeed() {
               key={cat}
               type="button"
               onClick={() => setCategory(cat)}
+              aria-pressed={category === cat}
               className={`flex-shrink-0 rounded-full px-4 py-2 text-[11px] font-bold tracking-wider uppercase transition-all ${
                 category === cat
                   ? "bg-[var(--accent)] text-[#030508]"
@@ -144,6 +151,7 @@ export function NewsFeed() {
               key={t.value}
               type="button"
               onClick={() => setFilterType(t.value)}
+              aria-pressed={filterType === t.value}
               className={`chip cursor-pointer transition-all ${
                 filterType === t.value ? "chip-rss" : ""
               }`}
@@ -159,7 +167,7 @@ export function NewsFeed() {
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <div
                 key={n}
-                className="h-64 animate-pulse rounded-2xl glass"
+                className="aspect-video min-h-52 animate-pulse rounded-2xl glass"
                 style={{ animationDelay: `${n * 100}ms` }}
               />
             ))}

@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">NexusWire</string>
+    <string name="title_activity_main">NexusWire</string>
+    <string name="package_name">com.ndnanalytics.nexuswire</string>
+    <string name="custom_url_scheme">com.ndnanalytics.nexuswire</string>
+</resources>
