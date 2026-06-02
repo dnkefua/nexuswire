@@ -13,6 +13,19 @@ function videoTimeLabel(item: NewsItem): string {
   return item.fallbackKind === "channel_playlist" ? "Latest uploads" : timeAgo(item.publishedAt);
 }
 
+function publishedTime(item: NewsItem): number {
+  const parsed = new Date(item.publishedAt).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function newestFirst(items: NewsItem[]): NewsItem[] {
+  return [...items].sort((a, b) => {
+    if (a.fallbackKind === "channel_playlist" && b.fallbackKind !== "channel_playlist") return 1;
+    if (b.fallbackKind === "channel_playlist" && a.fallbackKind !== "channel_playlist") return -1;
+    return publishedTime(b) - publishedTime(a);
+  });
+}
+
 export default function LivePage() {
   const [videos, setVideos] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -24,7 +37,7 @@ export default function LivePage() {
     fetch("/api/news?type=youtube&limit=200")
       .then((r) => r.json())
       .then((d: { items?: NewsItem[] }) => {
-        const items = d.items || [];
+        const items = newestFirst(d.items || []);
 
         const params = new URLSearchParams(window.location.search);
         const queryVideoId = params.get("v") || params.get("id");

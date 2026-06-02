@@ -396,6 +396,19 @@ function rankAndDedupe(items: NewsItem[]): NewsItem[] {
   return unique;
 }
 
+function publishedTime(item: NewsItem): number {
+  const parsed = new Date(item.publishedAt).getTime();
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function sortNewestFirst(items: NewsItem[]): NewsItem[] {
+  return [...items].sort((a, b) => {
+    if (a.fallbackKind === "channel_playlist" && b.fallbackKind !== "channel_playlist") return 1;
+    if (b.fallbackKind === "channel_playlist" && a.fallbackKind !== "channel_playlist") return -1;
+    return publishedTime(b) - publishedTime(a);
+  });
+}
+
 async function getAllNews(force = false): Promise<NewsItem[]> {
   const now = Date.now();
   if (!force && cache && cache.expires > now) {
@@ -503,6 +516,10 @@ export async function aggregateNews(options?: {
         (i.summary || "").toLowerCase().includes(q) ||
         i.source.toLowerCase().includes(q)
     );
+  }
+
+  if (options?.type === "youtube") {
+    items = sortNewestFirst(items);
   }
 
   return items.slice(offset, offset + limit);
