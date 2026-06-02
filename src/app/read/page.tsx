@@ -14,6 +14,7 @@ import { AiInsights } from "@/components/AiInsights";
 import { ArticleExcerpt } from "@/components/ArticleExcerpt";
 import { timeAgo } from "@/lib/utils";
 import type { NewsItem } from "@/lib/types";
+import { articlePreviewFraction } from "@/lib/taxonomy";
 
 function ReaderContent() {
   const searchParams = useSearchParams();
@@ -47,6 +48,11 @@ function ReaderContent() {
   const decodedPublished = publishedAt ? decodeURIComponent(publishedAt) : new Date().toISOString();
   const decodedRegion = region ? decodeURIComponent(region) : undefined;
   const decodedCountry = country ? decodeURIComponent(country) : undefined;
+  const previewFraction = articlePreviewFraction({
+    sourceType,
+    region: decodedRegion,
+    country: decodedCountry,
+  });
 
   const storyItem = {
     id,
@@ -58,6 +64,8 @@ function ReaderContent() {
     publishedAt: decodedPublished,
     sourceType,
     category,
+    region: decodedRegion || "",
+    country: decodedCountry || "",
   };
 
   return (
@@ -108,9 +116,14 @@ function ReaderContent() {
           </div>
         </div>
 
-        {/* Extended preview (~25% of the article) with continue-reading CTA.
+        {/* Policy preview with continue-reading CTA.
             Falls back to the RSS summary when extraction is unavailable. */}
-        <ArticleExcerpt url={decodedLink} source={decodedSource} fallbackSummary={decodedSummary} />
+        <ArticleExcerpt
+          url={decodedLink}
+          source={decodedSource}
+          fallbackSummary={decodedSummary}
+          previewFraction={previewFraction}
+        />
 
         {/* AI-generated context (graceful when no key configured) */}
         <AiInsights item={storyItem} />

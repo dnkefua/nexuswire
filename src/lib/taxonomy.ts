@@ -114,6 +114,29 @@ export function countryBySlug(slug: string): CountryDef | undefined {
   return COUNTRIES.find((c) => c.slug === slug);
 }
 
+export function isAfricanCountryOrRegion(country?: string, region?: string): boolean {
+  const normalizedCountry = (country || "").trim().toLowerCase();
+  const normalizedRegion = (region || "").trim().toLowerCase();
+  if (
+    normalizedRegion.includes("africa") ||
+    normalizedRegion === "pan-african" ||
+    normalizedCountry === "pan-african" ||
+    normalizedCountry === "africa"
+  ) {
+    return true;
+  }
+  return COUNTRIES.some((c) => c.name.toLowerCase() === normalizedCountry);
+}
+
+export function articlePreviewFraction(item: {
+  sourceType?: string;
+  country?: string;
+  region?: string;
+}): number {
+  const isNewsOrBlog = item.sourceType === "rss" || item.sourceType === "blog";
+  return isNewsOrBlog && isAfricanCountryOrRegion(item.country, item.region) ? 0.75 : 0.5;
+}
+
 export function categoryToSlug(cat: string): string {
   return cat.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 }

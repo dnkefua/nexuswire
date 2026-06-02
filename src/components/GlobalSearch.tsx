@@ -212,7 +212,7 @@ export function GlobalSearch() {
                       target = undefined;
                       rel = undefined;
                     } else if (isBlogOrRss) {
-                      href = `/read?id=${item.id}&title=${encodeURIComponent(item.title)}&summary=${encodeURIComponent(item.summary || "")}&image=${encodeURIComponent(item.image || "")}&source=${encodeURIComponent(item.source)}&link=${encodeURIComponent(item.link)}&publishedAt=${encodeURIComponent(item.publishedAt)}`;
+                      href = `/read?id=${item.id}&title=${encodeURIComponent(item.title)}&summary=${encodeURIComponent(item.summary || "")}&image=${encodeURIComponent(item.image || "")}&source=${encodeURIComponent(item.source)}&link=${encodeURIComponent(item.link)}&publishedAt=${encodeURIComponent(item.publishedAt)}&sourceType=${encodeURIComponent(item.sourceType)}&category=${encodeURIComponent(item.category)}&region=${encodeURIComponent(item.region || "")}&country=${encodeURIComponent(item.country || "")}`;
                       target = undefined;
                       rel = undefined;
                     }

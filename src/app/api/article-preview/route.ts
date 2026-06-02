@@ -6,6 +6,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get("url");
+  const requestedFraction = Number(request.nextUrl.searchParams.get("fraction") || 0.5);
+  const fraction = requestedFraction >= 0.75 ? 0.75 : 0.5;
   if (!url) {
     return NextResponse.json({ ok: false, error: "url required" }, { status: 400 });
   }
@@ -15,6 +17,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ ok: false, error: "rate-limited" }, { status: 429 });
   }
 
-  const excerpt = await fetchArticleExcerpt(url, 0.25);
+  const excerpt = await fetchArticleExcerpt(url, fraction);
   return NextResponse.json(excerpt);
 }

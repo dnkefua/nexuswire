@@ -5,7 +5,7 @@ import { useSaved } from "@/lib/saved-client";
 import type { NewsItem } from "@/lib/types";
 
 interface Props {
-  item: Pick<NewsItem, "id" | "title" | "summary" | "link" | "source" | "image" | "publishedAt" | "sourceType" | "category">;
+  item: Pick<NewsItem, "id" | "title" | "summary" | "link" | "source" | "image" | "publishedAt" | "sourceType" | "category" | "region" | "country">;
 }
 
 export function StoryActions({ item }: Props) {
@@ -18,7 +18,19 @@ export function StoryActions({ item }: Props) {
     if (saved) {
       remove(item.id);
     } else {
-      save({ id: item.id, title: item.title, summary: item.summary, link: item.link, source: item.source, image: item.image, publishedAt: item.publishedAt, sourceType: item.sourceType, category: item.category });
+      save({
+        id: item.id,
+        title: item.title,
+        summary: item.summary,
+        link: item.link,
+        source: item.source,
+        image: item.image,
+        publishedAt: item.publishedAt,
+        sourceType: item.sourceType,
+        category: item.category,
+        region: item.region,
+        country: item.country,
+      });
     }
   }
 

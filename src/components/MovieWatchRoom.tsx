@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 
-type MoviePlatform = "Web" | "YouTube";
+type MoviePlatform = "Web" | "YouTube" | "TikTok";
 
 type MovieItem = {
   id: string;
@@ -30,16 +30,17 @@ const discoveryLinks = [
     href: "https://www.youtube.com/movies",
     source: "YouTube",
   },
-  {
-    label: "TikTok public-domain clips",
-    href: "https://www.tiktok.com/tag/publicdomainmovies",
-    source: "TikTok",
-  },
 ];
 
 function platformClasses(platform: MoviePlatform): string {
   if (platform === "YouTube") return "border-red-400/30 bg-red-500/10 text-red-100";
+  if (platform === "TikTok") return "border-cyan-300/30 bg-cyan-400/10 text-cyan-100";
   return "border-[var(--gold)]/35 bg-[var(--gold)]/10 text-[var(--gold-bright)]";
+}
+
+function extractTikTokVideoId(url: string): string | null {
+  const match = url.match(/\/video\/(\d+)/) || url.match(/[?&](?:video_id|item_id)=(\d+)/);
+  return match?.[1] || null;
 }
 
 function emptyMovie(): MovieItem {
@@ -64,8 +65,10 @@ export function MovieWatchRoom() {
   const [activeId, setActiveId] = useState("");
   const [filter, setFilter] = useState<"all" | "web" | "youtube">("all");
   const [query, setQuery] = useState("");
+  const [tikTokUrl, setTikTokUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [tikTokError, setTikTokError] = useState("");
   const playerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -111,6 +114,38 @@ export function MovieWatchRoom() {
 
   function playMovie(movie: MovieItem) {
     setActiveId(movie.id);
+    window.requestAnimationFrame(() => {
+      playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function playTikTokUrl(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const videoId = extractTikTokVideoId(tikTokUrl.trim());
+    if (!videoId) {
+      setTikTokError("Paste a TikTok video URL that contains /video/...");
+      return;
+    }
+
+    const tikTokMovie: MovieItem = {
+      id: `tiktok-${videoId}`,
+      title: "TikTok movie clip",
+      year: "TikTok",
+      platform: "TikTok",
+      source: "TikTok",
+      genre: "Short-form",
+      runtime: "Clip",
+      rights: "Verify creator rights",
+      description:
+        "TikTok movie or public-domain clip opened inside NexusWire through TikTok's official player.",
+      poster: "https://archive.org/services/img/TheGeneral",
+      embedUrl: `https://www.tiktok.com/player/v1/${videoId}`,
+      sourceUrl: tikTokUrl.trim(),
+    };
+
+    setTikTokError("");
+    setMovies((current) => [tikTokMovie, ...current.filter((movie) => movie.id !== tikTokMovie.id)]);
+    setActiveId(tikTokMovie.id);
     window.requestAnimationFrame(() => {
       playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -216,6 +251,33 @@ export function MovieWatchRoom() {
             not expose every title through embeds, so NexusWire also indexes licensed
             full-movie channels that provide standard YouTube players.
           </div>
+          <form onSubmit={playTikTokUrl} className="mt-3 rounded-xl border border-cyan-300/20 bg-cyan-400/5 p-3">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-cyan-100">
+              Open TikTok in app
+            </label>
+            <input
+              type="url"
+              value={tikTokUrl}
+              onChange={(event) => {
+                setTikTokUrl(event.target.value);
+                setTikTokError("");
+              }}
+              placeholder="https://www.tiktok.com/@creator/video/..."
+              aria-label="TikTok movie clip URL"
+              className="mt-2"
+            />
+            {tikTokError && (
+              <p className="mt-2 text-[10px] font-semibold text-[var(--danger)]">
+                {tikTokError}
+              </p>
+            )}
+            <button
+              type="submit"
+              className="mt-2 inline-flex h-9 items-center rounded-xl border border-cyan-300/40 bg-cyan-300/10 px-3 text-[10px] font-bold uppercase tracking-widest text-cyan-100 transition-colors hover:bg-cyan-300/20"
+            >
+              Play TikTok
+            </button>
+          </form>
           <div className="mt-3 space-y-2">
             {discoveryLinks.map((link) => (
               <a

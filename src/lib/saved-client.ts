@@ -12,6 +12,8 @@ export interface SavedArticle {
   publishedAt: string;
   sourceType: string;
   category: string;
+  region?: string;
+  country?: string;
   savedAt: string;
 }
 

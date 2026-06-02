@@ -26,7 +26,7 @@ export default function SavedPage() {
               {saved.length} saved {saved.length === 1 ? "article" : "articles"}
             </p>
             {saved.map((item) => {
-              const readHref = `/read?id=${item.id}&title=${encodeURIComponent(item.title)}&summary=${encodeURIComponent(item.summary || "")}&image=${encodeURIComponent(item.image || "")}&source=${encodeURIComponent(item.source)}&link=${encodeURIComponent(item.link)}&publishedAt=${encodeURIComponent(item.publishedAt)}`;
+              const readHref = `/read?id=${item.id}&title=${encodeURIComponent(item.title)}&summary=${encodeURIComponent(item.summary || "")}&image=${encodeURIComponent(item.image || "")}&source=${encodeURIComponent(item.source)}&link=${encodeURIComponent(item.link)}&publishedAt=${encodeURIComponent(item.publishedAt)}&sourceType=${encodeURIComponent(item.sourceType)}&category=${encodeURIComponent(item.category)}&region=${encodeURIComponent(item.region || "")}&country=${encodeURIComponent(item.country || "")}`;
               return (
                 <div key={item.id} className="rounded-2xl glass p-4 flex gap-4 fade-up items-start">
                   {item.image && (
