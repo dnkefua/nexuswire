@@ -46,7 +46,8 @@ export async function GET(request: NextRequest) {
   const region = searchParams.get("region") || undefined;
   const country = searchParams.get("country") || undefined;
   const q = searchParams.get("q") || undefined;
-  const limit = Math.min(Number(searchParams.get("limit") || 40), 80);
+  const requestedLimit = Number(searchParams.get("limit") || 40);
+  const limit = Number.isFinite(requestedLimit) && requestedLimit > 0 ? requestedLimit : 40;
   const offset = Math.max(Number(searchParams.get("cursor") || 0), 0);
   const normalizedCategory = category === "All" ? undefined : category;
 

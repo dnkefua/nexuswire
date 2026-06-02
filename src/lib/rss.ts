@@ -59,9 +59,9 @@ async function pooledMap<T, R>(items: T[], limit: number, fn: (item: T) => Promi
   return results;
 }
 
-/** Fetch all configured feeds with bounded concurrency. */
-export async function fetchAllFeeds(perFeed = 8): Promise<NewsItem[]> {
-  const batches = await pooledMap(DEFAULT_FEEDS, 6, (s) => fetchFeed(s, perFeed));
+/** Fetch configured feeds with bounded concurrency. */
+export async function fetchAllFeeds(perFeed = 8, sources: FeedSource[] = DEFAULT_FEEDS): Promise<NewsItem[]> {
+  const batches = await pooledMap(sources, 6, (s) => fetchFeed(s, perFeed));
   return batches.flat();
 }
 
@@ -340,6 +340,30 @@ export async function fetchFeed(
 }
 
 /** Fetch & cache the full aggregated feed (all sources). */
+const scopedCache: Record<string, { items: NewsItem[]; expires: number }> = {};
+
+function rankAndDedupe(items: NewsItem[]): NewsItem[] {
+  const rankedAt = Date.now();
+  function score(item: NewsItem): number {
+    const ageHours = Math.max(0, (rankedAt - new Date(item.publishedAt).getTime()) / 3_600_000);
+    const recency = Math.max(0, 100 - ageHours);
+    const credibility = item.credibilityScore ?? 60;
+    const discoveryPenalty = item.viaDiscovery ? 15 : 0;
+    return recency * 0.6 + credibility * 0.4 - discoveryPenalty;
+  }
+
+  items.sort((a, b) => score(b) - score(a));
+
+  const unique: NewsItem[] = [];
+  for (const item of items) {
+    if (!unique.some((u) => isLikelyDuplicate(u, item))) {
+      unique.push(item);
+    }
+  }
+
+  return unique;
+}
+
 async function getAllNews(force = false): Promise<NewsItem[]> {
   const now = Date.now();
   if (!force && cache && cache.expires > now) {
@@ -373,6 +397,23 @@ async function getAllNews(force = false): Promise<NewsItem[]> {
   return unique;
 }
 
+async function getScopedNews(
+  cacheKey: string,
+  sources: FeedSource[],
+  perFeed: number,
+  force = false
+): Promise<NewsItem[]> {
+  const now = Date.now();
+  if (!force && scopedCache[cacheKey] && scopedCache[cacheKey].expires > now) {
+    return scopedCache[cacheKey].items;
+  }
+
+  const merged = await fetchAllFeeds(perFeed, sources);
+  const unique = rankAndDedupe(merged);
+  scopedCache[cacheKey] = { items: unique, expires: now + CACHE_TTL_MS };
+  return unique;
+}
+
 export async function aggregateNews(options?: {
   category?: string;
   type?: NewsSourceType;
@@ -386,7 +427,16 @@ export async function aggregateNews(options?: {
 }): Promise<NewsItem[]> {
   const limit = options?.limit ?? 48;
   const offset = options?.offset ?? 0;
-  let items = await getAllNews(options?.force);
+  const videoDepth = Math.min(50, Math.max(20, limit + offset));
+  let items =
+    options?.type === "youtube"
+      ? await getScopedNews(
+          `youtube:${videoDepth}`,
+          DEFAULT_FEEDS.filter((s) => s.type === "youtube"),
+          videoDepth,
+          options?.force
+        )
+      : await getAllNews(options?.force);
 
   if (options?.category && options.category !== "All") {
     items = items.filter((i) => matchesCategory(options.category!, i));
