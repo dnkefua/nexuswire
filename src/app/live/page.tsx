@@ -24,9 +24,12 @@ export default function LivePage() {
 
         const params = new URLSearchParams(window.location.search);
         const queryVideoId = params.get("v") || params.get("id");
+        const queryPlaylistId = params.get("playlist");
 
-        if (queryVideoId) {
-          const found = items.find((v) => v.videoId === queryVideoId);
+        if (queryVideoId || queryPlaylistId) {
+          const found = items.find((v) =>
+            queryVideoId ? v.videoId === queryVideoId : v.playlistId === queryPlaylistId
+          );
           if (found) {
             setVideos(items);
             setActive(found);
@@ -39,8 +42,10 @@ export default function LivePage() {
               id: `temp-${queryVideoId}`,
               title: decodeURIComponent(title),
               summary: decodeURIComponent(summary),
-              link: `https://www.youtube.com/watch?v=${queryVideoId}`,
-              image: `https://i.ytimg.com/vi/${queryVideoId}/hqdefault.jpg`,
+              link: queryVideoId
+                ? `https://www.youtube.com/watch?v=${queryVideoId}`
+                : `https://www.youtube.com/playlist?list=${queryPlaylistId}`,
+              image: queryVideoId ? `https://i.ytimg.com/vi/${queryVideoId}/hqdefault.jpg` : undefined,
               source: decodeURIComponent(source),
               sourceType: "youtube",
               category: "Live",
@@ -49,7 +54,8 @@ export default function LivePage() {
               publishedAt: new Date().toISOString(),
               author: decodeURIComponent(source),
               isLive: false,
-              videoId: queryVideoId,
+              videoId: queryVideoId || undefined,
+              playlistId: queryPlaylistId || undefined,
             };
 
             setVideos([tempItem, ...items]);
@@ -76,13 +82,17 @@ export default function LivePage() {
             <p className="text-[var(--text-muted)]">Unable to load latest videos.</p>
             <p className="text-xs text-[var(--text-muted)]/60">Check your connection or visit channels directly on YouTube.</p>
           </div>
-        ) : active?.videoId ? (
+        ) : active?.videoId || active?.playlistId ? (
           <div className="space-y-4">
             <div className="overflow-hidden rounded-2xl glow-border">
               <div className="relative aspect-video bg-black">
                 <iframe
                   title={active.title}
-                  src={`https://www.youtube.com/embed/${active.videoId}?autoplay=0&rel=0`}
+                  src={
+                    active.videoId
+                      ? `https://www.youtube.com/embed/${active.videoId}?autoplay=0&rel=0`
+                      : `https://www.youtube.com/embed/videoseries?list=${active.playlistId}&autoplay=0&rel=0`
+                  }
                   className="absolute inset-0 h-full w-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
@@ -110,16 +120,16 @@ export default function LivePage() {
                 >
                   Watch on YouTube →
                 </a>
-                {active.videoId && (
+                {(active.videoId || active.playlistId) && (
                   <div className="border-t border-[var(--border)] pt-4">
                     <EngagementBar
                       targetType="video"
-                      targetId={active.videoId}
+                      targetId={active.videoId || active.playlistId || active.id}
                       onCommentClick={() => setShowComments((v) => !v)}
                     />
                     {showComments && (
                       <div className="mt-4">
-                        <CommentSection targetType="video" targetId={active.videoId} />
+                        <CommentSection targetType="video" targetId={active.videoId || active.playlistId || active.id} />
                       </div>
                     )}
                   </div>

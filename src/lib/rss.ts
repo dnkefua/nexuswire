@@ -100,6 +100,32 @@ function youtubeThumb(videoId: string): string {
   return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 }
 
+function uploadsPlaylistId(channelId: string): string {
+  return channelId.startsWith("UC") ? `UU${channelId.slice(2)}` : channelId;
+}
+
+function youtubeChannelFallback(source: FeedSource): NewsItem | null {
+  if (!source.youtubeChannelId) return null;
+  const playlistId = uploadsPlaylistId(source.youtubeChannelId);
+  const link = source.homepageUrl || `https://www.youtube.com/channel/${source.youtubeChannelId}`;
+  return {
+    id: hashId(`${source.id}-${playlistId}`),
+    title: `${source.name} latest uploads`,
+    summary: `Browse the official ${source.name} YouTube uploads playlist.`,
+    link,
+    source: source.name,
+    sourceType: "youtube",
+    category: source.category,
+    region: source.region,
+    country: source.country,
+    publishedAt: new Date(0).toISOString(),
+    author: source.name,
+    isLive: true,
+    playlistId,
+    credibilityScore: source.credibilityScore,
+  };
+}
+
 const liveIdCache: Record<string, { id: string; expires: number }> = {};
 
 async function getLiveVideoIdFromYouTube(handle: string): Promise<string | null> {
@@ -150,7 +176,8 @@ async function getLiveVideoIdFromYouTube(handle: string): Promise<string | null>
  */
 async function getYouTubeFallbacks(source: FeedSource, limit = 8): Promise<NewsItem[]> {
   if (process.env.NEXT_PUBLIC_ENABLE_DEMO_FALLBACKS !== "true") {
-    return [];
+    const channel = youtubeChannelFallback(source);
+    return channel ? [channel] : [];
   }
   const fallbacks: Record<string, { title: string; videoId: string; summary: string }[]> = {
     "youtube-bbc": [
@@ -275,7 +302,7 @@ export async function fetchFeed(
         throw err;
       }
     }
-    const items = (feed.items || []).slice(0, limit).map((item) => {
+    const items: NewsItem[] = (feed.items || []).slice(0, limit).map((item) => {
       const link = item.link || item.guid || source.url;
       const videoId =
         source.type === "youtube" ? extractYouTubeId(link) : undefined;
@@ -313,10 +340,13 @@ export async function fetchFeed(
         author: item.creator || (item as unknown as { author?: string }).author || feed.title,
         isLive: source.type === "youtube",
         videoId,
+        playlistId: undefined,
         credibilityScore: source.credibilityScore,
         viaDiscovery: source.googleNews === true,
       };
     });
+    const channelFallback = source.type === "youtube" ? youtubeChannelFallback(source) : null;
+    if (channelFallback) items.push(channelFallback);
     if (items.length > 0) {
       recordHealth(source, {
         lastSuccessfulFetchAt: fetchedAt,

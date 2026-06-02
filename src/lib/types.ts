@@ -31,6 +31,7 @@ export interface NewsItem {
   author?: string;
   isLive?: boolean;
   videoId?: string;
+  playlistId?: string;
   credibilityScore?: number;
   /** True when discovered via Google News RSS rather than a direct publisher feed. */
   viaDiscovery?: boolean;
@@ -140,6 +141,7 @@ export interface NormalizedArticle {
   credibilityScore?: number;
   viaDiscovery?: boolean;
   videoId?: string;
+  playlistId?: string;
   isLive?: boolean;
 }
 
@@ -191,6 +193,8 @@ export interface FeedSource {
   country: string;
   credibilityScore?: number;
   googleNews?: boolean;
+  homepageUrl?: string;
+  youtubeChannelId?: string;
 }
 
 export interface EngagementCounts {

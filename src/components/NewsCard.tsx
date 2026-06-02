@@ -26,7 +26,14 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
   let rel: string | undefined = "noopener noreferrer";
 
   if (isVideo) {
-    href = `/live?v=${item.videoId}&title=${encodeURIComponent(item.title)}&source=${encodeURIComponent(item.source)}&summary=${encodeURIComponent(item.summary || "")}`;
+    const params = new URLSearchParams({
+      title: item.title,
+      source: item.source,
+      summary: item.summary || "",
+    });
+    if (item.videoId) params.set("v", item.videoId);
+    if (item.playlistId) params.set("playlist", item.playlistId);
+    href = `/live?${params}`;
     target = undefined;
     rel = undefined;
   } else if (isBlogOrRss) {

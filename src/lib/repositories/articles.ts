@@ -34,6 +34,7 @@ export function toNormalized(item: NewsItem): NormalizedArticle {
     credibilityScore: item.credibilityScore,
     viaDiscovery: item.viaDiscovery,
     videoId: item.videoId,
+    playlistId: item.playlistId,
     isLive: item.isLive,
   };
 }
@@ -64,6 +65,7 @@ export function toNewsItem(a: NormalizedArticle): NewsItem {
     // Reconstruct videoId from the stored field, falling back to the URL so
     // previously-stored videos still render embeds without a re-ingest.
     videoId: a.sourceType === "youtube" ? (a.videoId || videoIdFromUrl(a.originalLink)) : undefined,
+    playlistId: a.playlistId,
     isLive: a.isLive,
   };
 }

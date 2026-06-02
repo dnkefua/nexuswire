@@ -172,6 +172,8 @@ export function toFeedSource(src: NewsSource): FeedSource {
     country: src.country,
     credibilityScore: src.credibilityScore,
     googleNews: src.sourceType === "google_news_rss",
+    homepageUrl: src.homepageUrl,
+    youtubeChannelId: src.youtubeChannelId,
   };
 }
 
