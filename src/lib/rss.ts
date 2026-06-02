@@ -430,12 +430,15 @@ export async function aggregateNews(options?: {
   const videoDepth = Math.min(50, Math.max(20, limit + offset));
   let items =
     options?.type === "youtube"
-      ? await getScopedNews(
-          `youtube:${videoDepth}`,
-          DEFAULT_FEEDS.filter((s) => s.type === "youtube"),
-          videoDepth,
-          options?.force
-        )
+      ? rankAndDedupe([
+          ...(await getScopedNews(
+            `youtube:${videoDepth}`,
+            DEFAULT_FEEDS.filter((s) => s.type === "youtube"),
+            videoDepth,
+            options?.force
+          )),
+          ...(await getAllNews(options?.force)).filter((i) => i.sourceType === "youtube"),
+        ])
       : await getAllNews(options?.force);
 
   if (options?.category && options.category !== "All") {
