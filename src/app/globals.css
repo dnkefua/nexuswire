@@ -156,6 +156,68 @@ body::after {
   animation: fade-up 0.4s ease both;
 }
 
+@keyframes card-click-pop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  45% {
+    transform: translateY(-2px) scale(0.985);
+  }
+  100% {
+    transform: translateY(0) scale(1.01);
+  }
+}
+
+@keyframes card-shine-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-140%) skewX(-18deg);
+  }
+  35% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(140%) skewX(-18deg);
+  }
+}
+
+.news-card {
+  transform-origin: center;
+}
+
+.news-card:active {
+  transform: translateY(1px) scale(0.992);
+}
+
+.news-card-clicked {
+  animation: card-click-pop 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  box-shadow:
+    0 0 0 1px rgba(212, 168, 83, 0.38),
+    0 18px 44px rgba(45, 140, 255, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.news-card-shine {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.22) 45%, rgba(212, 168, 83, 0.22) 52%, transparent 100%);
+}
+
+.news-card-clicked .news-card-shine {
+  animation: card-shine-sweep 0.42s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-card-clicked,
+  .news-card-clicked .news-card-shine {
+    animation: none;
+  }
+}
+
 .scroll-hide {
   scrollbar-width: none;
 }

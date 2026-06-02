@@ -6,7 +6,7 @@ import { NewsCard } from "./NewsCard";
 import { Ticker } from "./Ticker";
 import Link from "next/link";
 
-const CATEGORIES = ["All", "Top Stories", "Politics", "Business", "Markets", "Technology", "Startups", "Fintech", "Sports", "Health", "Energy", "Security", "Entertainment", "Francophone Africa", "Video News"];
+const CATEGORIES = ["All", "Top Stories", "Politics", "Business", "Markets", "Technology", "Startups", "Fintech", "Sports", "Comedy", "Health", "Energy", "Security", "Entertainment", "Francophone Africa", "Video News"];
 const SOURCE_TYPES = [
   { label: "All Types", value: "" },
   { label: "RSS", value: "rss" },

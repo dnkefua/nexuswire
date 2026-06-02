@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useState, type MouseEvent } from "react";
 import type { NewsItem } from "@/lib/types";
 import { timeAgo, cn } from "@/lib/utils";
 import { SourceBadge } from "./SourceBadge";
@@ -12,6 +13,7 @@ interface NewsCardProps {
 }
 
 export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
+  const [clicked, setClicked] = useState(false);
   const isVideo = item.sourceType === "youtube";
   const isBlogOrRss = item.sourceType === "blog" || item.sourceType === "rss";
   const isRemoteImage = item.image?.startsWith("http");
@@ -44,17 +46,40 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
     rel = undefined;
   }
 
+  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
+    setClicked(true);
+    window.setTimeout(() => setClicked(false), 420);
+
+    const shouldUseNativeNavigation =
+      target === "_blank" ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0;
+
+    if (shouldUseNativeNavigation) return;
+
+    event.preventDefault();
+    window.setTimeout(() => {
+      window.location.href = href;
+    }, 170);
+  }
+
   return (
     <a
       href={href}
       target={target}
       rel={rel}
+      onClick={handleClick}
       className={cn(
-        "group block overflow-hidden rounded-2xl glass transition-all hover:glow-border fade-up",
+        "news-card group relative block overflow-hidden rounded-2xl glass transition-all hover:glow-border fade-up",
+        clicked && "news-card-clicked",
         featured ? "col-span-full" : ""
       )}
       style={{ animationDelay: `${index * 50}ms` }}
     >
+      <span className="news-card-shine" aria-hidden="true" />
       {item.image && (
         <div
           className={cn(

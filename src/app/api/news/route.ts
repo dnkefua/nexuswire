@@ -34,6 +34,22 @@ export async function GET(request: NextRequest) {
       items = stored.map(toNewsItem);
       // region isn't a stored filter dimension; apply it in memory
       if (region) items = items.filter((i) => i.region === region);
+
+      const hasSpecificFilter = Boolean(category || type || source || region || country || q);
+      if (items.length === 0 && offset === 0 && hasSpecificFilter) {
+        items = await aggregateNews({
+          category: category === "All" ? undefined : category,
+          type: type || undefined,
+          source,
+          region,
+          country,
+          q,
+          limit: limit + 1,
+          offset,
+          force: true,
+        });
+        void upsertArticles(items).catch(() => {});
+      }
     } else {
       items = await aggregateNews({
         category: category === "All" ? undefined : category,
