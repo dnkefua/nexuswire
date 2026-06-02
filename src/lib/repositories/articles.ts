@@ -35,6 +35,7 @@ export function toNormalized(item: NewsItem): NormalizedArticle {
     viaDiscovery: item.viaDiscovery,
     videoId: item.videoId,
     playlistId: item.playlistId,
+    fallbackKind: item.fallbackKind,
     isLive: item.isLive,
   };
 }
@@ -66,6 +67,7 @@ export function toNewsItem(a: NormalizedArticle): NewsItem {
     // previously-stored videos still render embeds without a re-ingest.
     videoId: a.sourceType === "youtube" ? (a.videoId || videoIdFromUrl(a.originalLink)) : undefined,
     playlistId: a.playlistId,
+    fallbackKind: a.fallbackKind,
     isLive: a.isLive,
   };
 }

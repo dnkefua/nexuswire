@@ -32,6 +32,7 @@ export interface NewsItem {
   isLive?: boolean;
   videoId?: string;
   playlistId?: string;
+  fallbackKind?: "channel_playlist";
   credibilityScore?: number;
   /** True when discovered via Google News RSS rather than a direct publisher feed. */
   viaDiscovery?: boolean;
@@ -142,6 +143,7 @@ export interface NormalizedArticle {
   viaDiscovery?: boolean;
   videoId?: string;
   playlistId?: string;
+  fallbackKind?: "channel_playlist";
   isLive?: boolean;
 }
 

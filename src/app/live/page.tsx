@@ -9,6 +9,10 @@ import { SourceTransparencyCard } from "@/components/SourceTransparencyCard";
 import type { NewsItem } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
 
+function videoTimeLabel(item: NewsItem): string {
+  return item.fallbackKind === "channel_playlist" ? "Latest uploads" : timeAgo(item.publishedAt);
+}
+
 export default function LivePage() {
   const [videos, setVideos] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,7 +108,7 @@ export default function LivePage() {
                   <span className="text-[10px] font-bold tracking-widest text-[var(--text-muted)] uppercase">
                     {active.source}
                   </span>
-                  <span className="text-[10px] text-[var(--text-muted)]">· {timeAgo(active.publishedAt)}</span>
+                  <span className="text-[10px] text-[var(--text-muted)]">· {videoTimeLabel(active)}</span>
                 </div>
                 <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                   {active.title}
@@ -184,7 +188,7 @@ export default function LivePage() {
                   <div className="min-w-0 flex-1">
                     <p className="line-clamp-2 text-xs font-semibold">{v.title}</p>
                     <p className="mt-1 text-[10px] text-[var(--text-muted)]">
-                      {v.source} · {timeAgo(v.publishedAt)}
+                      {v.source} · {videoTimeLabel(v)}
                     </p>
                   </div>
                 </button>

@@ -111,17 +111,18 @@ function youtubeChannelFallback(source: FeedSource): NewsItem | null {
   return {
     id: hashId(`${source.id}-${playlistId}`),
     title: `${source.name} latest uploads`,
-    summary: `Browse the official ${source.name} YouTube uploads playlist.`,
+    summary: `Official ${source.name} uploads playlist. Recent individual videos are shown first when YouTube RSS is available.`,
     link,
     source: source.name,
     sourceType: "youtube",
     category: source.category,
     region: source.region,
     country: source.country,
-    publishedAt: new Date(0).toISOString(),
+    publishedAt: new Date().toISOString(),
     author: source.name,
     isLive: true,
     playlistId,
+    fallbackKind: "channel_playlist",
     credibilityScore: source.credibilityScore,
   };
 }
@@ -379,7 +380,8 @@ function rankAndDedupe(items: NewsItem[]): NewsItem[] {
     const recency = Math.max(0, 100 - ageHours);
     const credibility = item.credibilityScore ?? 60;
     const discoveryPenalty = item.viaDiscovery ? 15 : 0;
-    return recency * 0.6 + credibility * 0.4 - discoveryPenalty;
+    const playlistFallbackPenalty = item.fallbackKind === "channel_playlist" ? 90 : 0;
+    return recency * 0.6 + credibility * 0.4 - discoveryPenalty - playlistFallbackPenalty;
   }
 
   items.sort((a, b) => score(b) - score(a));
@@ -410,7 +412,8 @@ async function getAllNews(force = false): Promise<NewsItem[]> {
     const recency = Math.max(0, 100 - ageHours); // newer → higher
     const credibility = item.credibilityScore ?? 60;
     const discoveryPenalty = item.viaDiscovery ? 15 : 0;
-    return recency * 0.6 + credibility * 0.4 - discoveryPenalty;
+    const playlistFallbackPenalty = item.fallbackKind === "channel_playlist" ? 90 : 0;
+    return recency * 0.6 + credibility * 0.4 - discoveryPenalty - playlistFallbackPenalty;
   }
   merged.sort((a, b) => score(b) - score(a));
 
