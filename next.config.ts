@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["firebase-admin"],
   images: {
     formats: ["image/avif", "image/webp"],
+    qualities: [58, 68, 75, 78, 82],
     minimumCacheTTL: 86400,
     remotePatterns: [
       { protocol: "https", hostname: "i.ytimg.com" },
