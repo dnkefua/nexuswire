@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type MouseEvent } from "react";
+import { useRef, useState, type MouseEvent } from "react";
 import type { NewsItem } from "@/lib/types";
 import { timeAgo, cn } from "@/lib/utils";
 import { SourceBadge } from "./SourceBadge";
@@ -14,6 +14,8 @@ interface NewsCardProps {
 
 export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
   const [clicked, setClicked] = useState(false);
+  const resetClickRef = useRef<number | null>(null);
+  const animatedPressRef = useRef(false);
   const isVideo = item.sourceType === "youtube";
   const isBlogOrRss = item.sourceType === "blog" || item.sourceType === "rss";
   const isRemoteImage = item.image?.startsWith("http");
@@ -46,10 +48,18 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
     rel = undefined;
   }
 
-  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
-    setClicked(true);
-    window.setTimeout(() => setClicked(false), 420);
+  function triggerClickAnimation() {
+    if (resetClickRef.current) {
+      window.clearTimeout(resetClickRef.current);
+    }
+    setClicked(false);
+    window.requestAnimationFrame(() => {
+      setClicked(true);
+      resetClickRef.current = window.setTimeout(() => setClicked(false), 520);
+    });
+  }
 
+  function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     const shouldUseNativeNavigation =
       target === "_blank" ||
       event.metaKey ||
@@ -60,10 +70,14 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
 
     if (shouldUseNativeNavigation) return;
 
+    if (!animatedPressRef.current) {
+      triggerClickAnimation();
+    }
+    animatedPressRef.current = false;
     event.preventDefault();
     window.setTimeout(() => {
       window.location.href = href;
-    }, 170);
+    }, 280);
   }
 
   return (
@@ -71,13 +85,17 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
       href={href}
       target={target}
       rel={rel}
+      onPointerDown={() => {
+        animatedPressRef.current = true;
+        triggerClickAnimation();
+      }}
       onClick={handleClick}
       className={cn(
         "news-card group relative block overflow-hidden rounded-2xl glass transition-all hover:glow-border fade-up",
         clicked && "news-card-clicked",
         featured ? "col-span-full" : ""
       )}
-      style={{ animationDelay: `${index * 50}ms` }}
+      style={{ animationDelay: clicked ? "0ms" : `${index * 50}ms` }}
     >
       <span className="news-card-shine" aria-hidden="true" />
       {item.image && (

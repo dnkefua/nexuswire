@@ -17,7 +17,7 @@ export default function LivePage() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    fetch("/api/news?type=youtube&limit=12")
+    fetch("/api/news?type=youtube&limit=80")
       .then((r) => r.json())
       .then((d: { items?: NewsItem[] }) => {
         const items = d.items || [];
