@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
     minimumCacheTTL: 86400,
     remotePatterns: [
       { protocol: "https", hostname: "i.ytimg.com" },
+      { protocol: "https", hostname: "archive.org" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "api.dicebear.com" },
       { protocol: "https", hostname: "**.bbci.co.uk" },
