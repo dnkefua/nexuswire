@@ -20,6 +20,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE}/briefing`, priority: 0.9, changeFrequency: "hourly" as const },
     { url: `${BASE}/trending`, priority: 0.8, changeFrequency: "hourly" as const },
     { url: `${BASE}/live`, priority: 0.9, changeFrequency: "hourly" as const },
+    { url: `${BASE}/movies`, priority: 0.7, changeFrequency: "daily" as const },
     { url: `${BASE}/search`, priority: 0.8, changeFrequency: "daily" as const },
     ...countryPages,
     ...topicPages,
