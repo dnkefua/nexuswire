@@ -141,6 +141,26 @@ body::after {
   animation-play-state: paused;
 }
 
+/* Clickable highlights marquee on the landing TV player */
+.hl-track {
+  animation: ticker 55s linear infinite;
+  width: max-content;
+}
+/* Pause while the viewer is reading / aiming at a headline so it's easy to tap */
+.hl-marquee:hover .hl-track,
+.hl-marquee:active .hl-track,
+.hl-track:focus-within {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hl-track {
+    animation: none;
+  }
+  .hl-marquee {
+    overflow-x: auto;
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;

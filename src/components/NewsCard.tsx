@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useRef, useState, type MouseEvent } from "react";
 import type { NewsItem } from "@/lib/types";
 import { timeAgo, cn } from "@/lib/utils";
+import { newsHref } from "@/lib/item-link";
 import { SourceBadge } from "./SourceBadge";
 
 interface NewsCardProps {
@@ -21,39 +22,10 @@ export function NewsCard({ item, featured, index = 0 }: NewsCardProps) {
   const isRemoteImage = item.image?.startsWith("http");
   const eagerImage = featured || index < 3;
 
-  let href = item.link;
-  let target: string | undefined = "_blank";
-  let rel: string | undefined = "noopener noreferrer";
-
-  if (isVideo) {
-    const params = new URLSearchParams({
-      title: item.title,
-      source: item.source,
-      summary: item.summary || "",
-    });
-    if (item.videoId) params.set("v", item.videoId);
-    if (item.playlistId) params.set("playlist", item.playlistId);
-    href = `/live?${params}`;
-    target = undefined;
-    rel = undefined;
-  } else if (isBlogOrRss) {
-    const params = new URLSearchParams({
-      id: item.id,
-      title: item.title,
-      summary: item.summary || "",
-      image: item.image || "",
-      source: item.source,
-      link: item.link,
-      publishedAt: item.publishedAt,
-      sourceType: item.sourceType,
-      category: item.category,
-      region: item.region || "",
-      country: item.country || "",
-    });
-    href = `/read?${params}`;
-    target = undefined;
-    rel = undefined;
-  }
+  const href = newsHref(item);
+  const internal = isVideo || isBlogOrRss;
+  const target: string | undefined = internal ? undefined : "_blank";
+  const rel: string | undefined = internal ? undefined : "noopener noreferrer";
 
   function triggerClickAnimation() {
     if (resetClickRef.current) {
